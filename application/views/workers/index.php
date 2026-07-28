@@ -202,7 +202,7 @@
                             <option value="Tarik_Tunai">➖ Tarik Tunai</option>
                         </select>
                     </div>
-                    <div class="mb-3">
+                    <div class="mb-3" id="wrapLedgerProject">
                         <label for="ledgerProject" class="form-label">Proyek Terkait (Opsional)</label>
                         <select class="form-select" id="ledgerProject" name="project_id">
                             <option value="">-- Tidak Terkait Proyek --</option>
@@ -356,5 +356,38 @@ $('#formLedger').on('submit', function(e) {
         },
         complete: function() { btn.prop('disabled', false).html('<i class="bi bi-save me-1"></i><span>Simpan Transaksi</span>'); }
     });
+});
+
+$(document).ready(function() {
+    // 1. INISIALISASI PENCARIAN DROPDOWN (SELECT2)
+    // Catatan: Harus pakai dropdownParent agar input pencariannya bisa diklik di dalam Modal Bootstrap
+    if ($('#detailProject').length) {
+        $('#detailProject').select2({ dropdownParent: $('#modalLedgerDetail'), width: '100%' });
+    }
+    if ($('#editLedgerProject').length) {
+        $('#editLedgerProject').select2({ dropdownParent: $('#modalEditLedger'), width: '100%' });
+    }
+    if ($('#ledgerProject').length) {
+        $('#ledgerProject').select2({ dropdownParent: $('#modalLedger'), width: '100%' });
+    }
+
+    // 2. FUNGSI SEMBUNYIKAN PROYEK JIKA TARIK TUNAI
+    function toggleProyek(jenisSelect, wrapId, selectId) {
+        if ($(jenisSelect).val() === 'Tarik_Tunai') {
+            $(wrapId).slideUp(200); // Sembunyikan dengan animasi halus
+            $(selectId).val('').trigger('change'); // Kosongkan pilihan proyek
+        } else {
+            $(wrapId).slideDown(200); // Tampilkan kembali jika Hak Upah
+        }
+    }
+
+    // 3. PASANG EVENT LISTENER SAAT JENIS TRANSAKSI DIUBAH
+    $('#detailJenis').on('change', function() { toggleProyek(this, '#wrapDetailProject', '#detailProject'); });
+    $('#ledgerJenis').on('change', function() { toggleProyek(this, '#wrapLedgerProject', '#ledgerProject'); });
+    $('#editLedgerJenis').on('change', function() { toggleProyek(this, '#wrapEditProject', '#editLedgerProject'); });
+
+    // Pemicu khusus untuk Form Edit (saat data sukses dimuat ke modal)
+    // Tambahkan ini di dalam AJAX GET Edit (di blok success) setelah value diset:
+    // $('#editLedgerJenis').trigger('change');
 });
 </script>

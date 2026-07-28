@@ -153,7 +153,7 @@ class Workers extends MY_Controller {
 
         $this->form_validation->set_rules('worker_id', 'Tukang', 'required|integer');
         $this->form_validation->set_rules('jenis', 'Jenis', 'required|in_list[Hak_Upah,Tarik_Tunai]');
-        $this->form_validation->set_rules('jumlah', 'Jumlah', 'required|decimal');
+        $this->form_validation->set_rules('jumlah', 'Jumlah', 'required|numeric');
         $this->form_validation->set_rules('tgl', 'Tanggal', 'required');
 
         if ($this->form_validation->run() === FALSE) {

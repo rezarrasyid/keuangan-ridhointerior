@@ -178,9 +178,9 @@
                             <option value="Tarik_Tunai">➖ Tarik Tunai</option>
                         </select>
                     </div>
-                    <div class="mb-3">
+                    <div class="mb-3" id="wrapDetailProject"> 
                         <label for="detailProject" class="form-label">Proyek Terkait (Opsional)</label>
-                        <select class="form-select" id="detailProject" name="project_id">
+                        <select class="form-select" id="detailProject" name="project_id" style="width: 100%;">
                             <option value="">-- Tidak Terkait Proyek --</option>
                             <?php foreach ($projects_dropdown as $p): ?>
                             <option value="<?= $p->id ?>"><?= htmlspecialchars($p->nama_project) ?></option>
@@ -190,7 +190,7 @@
                     <div class="row g-3">
                         <div class="col-md-6">
                             <label for="detailJumlah" class="form-label">Jumlah (Rp) <span style="color:#EF4444;">*</span></label>
-                            <input type="number" class="form-control" id="detailJumlah" name="jumlah" min="1" step="1000" placeholder="0" required>
+                            <input type="text" class="form-control input-rupiah" id="..." name="jumlah" placeholder="0" required>
                         </div>
                         <div class="col-md-6">
                             <label for="detailTgl" class="form-label">Tanggal <span style="color:#EF4444;">*</span></label>
@@ -236,7 +236,7 @@
                             <option value="Tarik_Tunai">➖ Tarik Tunai</option>
                         </select>
                     </div>
-                    <div class="mb-3">
+                    <div class="mb-3" id="wrapDetailProject">
                         <label for="editLedgerProject" class="form-label">Proyek Terkait (Opsional)</label>
                         <select class="form-select" id="editLedgerProject" name="project_id">
                             <option value="">-- Tidak Terkait Proyek --</option>
@@ -293,15 +293,45 @@
 <script>
 var deleteLedgerId = null;
 
+// Auto-format angka dengan titik ribuan
+$(document).on('keyup', '.input-rupiah', function(e) {
+    var value = $(this).val().replace(/[^,\d]/g, ''); // Hanya izinkan angka
+    var split = value.split(',');
+    var sisa = split[0].length % 3;
+    var rupiah = split[0].substr(0, sisa);
+    var ribuan = split[0].substr(sisa).match(/\d{3}/gi);
+
+    if (ribuan) {
+        var separator = sisa ? '.' : '';
+        rupiah += separator + ribuan.join('.');
+    }
+    
+    $(this).val(rupiah);
+});
+
 // Add Submit
 $('#formLedgerDetail').on('submit', function(e) {
     e.preventDefault();
+    
+    // --- TAMBAHKAN 3 BARIS INI SEBELUM SERIALIZE ---
+    var inputJumlah = $(this).find('.input-rupiah');
+    var angkaBersih = inputJumlah.val().replace(/\./g, ''); // Hapus semua titik
+    inputJumlah.val(angkaBersih); // Ubah input jadi angka murni sesaat
+    // -----------------------------------------------
+
+    var formData = $(this).serialize(); // Ambil data yang sudah bersih
+    
+    // --- KEMBALIKAN FORMATNYA AGAR TAMPILAN TIDAK RUSAK ---
+    inputJumlah.val(angkaBersih.replace(/\B(?=(\d{3})+(?!\d))/g, ".")); 
+    // ------------------------------------------------------
+
     var btn = $('#btnSimpanLedgerDetail');
     btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-1"></span>Menyimpan...');
+    
     $.ajax({
         url: BASE_URL + 'workers/add_ledger',
         type: 'POST',
-        data: $(this).serialize(),
+        data: formData, // <--- UBAH BAGIAN INI SAJA
         dataType: 'json',
         success: function(res) {
             if (res.status === 'success') {
