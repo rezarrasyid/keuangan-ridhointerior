@@ -174,8 +174,7 @@
                         </div>
                         <div class="col-md-6">
                             <label for="proyekBiaya" class="form-label">Biaya Total (Rp) <span style="color:#EF4444;">*</span></label>
-                            <input type="number" class="form-control" id="proyekBiaya" name="biaya_total" min="0" step="1000" placeholder="0" required>
-                        </div>
+                            <input type="text" class="form-control input-rupiah" id="proyekBiaya" name="biaya_total" placeholder="0" required>                        </div>
                         <div class="col-md-3">
                             <label for="proyekStatus" class="form-label">Status Proyek</label>
                             <select class="form-select" id="proyekStatus" name="status_project">
@@ -230,13 +229,46 @@
 <script>
 var deleteProyekId = null;
 
+// Auto-format angka dengan titik ribuan
+$(document).on('keyup', '.input-rupiah', function(e) {
+    var value = $(this).val().replace(/[^,\d]/g, '');
+    var split = value.split(',');
+    var sisa = split[0].length % 3;
+    var rupiah = split[0].substr(0, sisa);
+    var ribuan = split[0].substr(sisa).match(/\d{3}/gi);
+    if (ribuan) {
+        var separator = sisa ? '.' : '';
+        rupiah += separator + ribuan.join('.');
+    }
+    $(this).val(rupiah);
+});
+
+// Inisialisasi Select2 pada dropdown Klien saat modal terbuka
+$('#modalProyek').on('shown.bs.modal', function () {
+    $('#proyekClient').select2({ 
+        dropdownParent: $('#modalProyek'), 
+        width: '100%' 
+    });
+});
+
 // ── SUBMIT Proyek ──
 $('#formProyek').on('submit', function(e) {
     e.preventDefault();
+    
+    var inputBiaya = $(this).find('.input-rupiah');
+    var angkaBersih = inputBiaya.val().replace(/\./g, '');
+    inputBiaya.val(angkaBersih);
+    
+    var formData = $(this).serialize();
+    inputBiaya.val(angkaBersih.replace(/\B(?=(\d{3})+(?!\d))/g, "."));
+
     var btn = $('#btnSimpanProyek');
     btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-1"></span>Menyimpan...');
     $.ajax({
-        url: BASE_URL + 'projects/store', type: 'POST', data: $(this).serialize(), dataType: 'json',
+        url: BASE_URL + 'projects/store', 
+        type: 'POST', 
+        data: formData, 
+        dataType: 'json',
         success: function(res) {
             if (res.status === 'success') {
                 showToast(res.message, 'success');

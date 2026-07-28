@@ -170,8 +170,7 @@ $pct_terbayar = $project->biaya_total > 0 ? min(100, ($project->total_terbayar /
                         </div>
                         <div class="col-md-6">
                             <label for="terminJumlah" class="form-label">Jumlah (Rp) <span style="color:#EF4444;">*</span></label>
-                            <input type="number" class="form-control" id="terminJumlah" name="jumlah"
-                                   min="1" step="1000" placeholder="0" required>
+                            <input type="text" class="form-control input-rupiah" id="terminJumlah" name="jumlah" placeholder="0" required>
                         </div>
                         <div class="col-md-6">
                             <label for="terminTgl" class="form-label">Tanggal <span style="color:#EF4444;">*</span></label>
@@ -240,7 +239,7 @@ $pct_terbayar = $project->biaya_total > 0 ? min(100, ($project->total_terbayar /
                         </div>
                         <div class="col-md-6">
                             <label for="editTerminJumlah" class="form-label">Jumlah (Rp) <span style="color:#EF4444;">*</span></label>
-                            <input type="number" class="form-control" id="editTerminJumlah" name="jumlah" min="1" step="1000" required>
+                            <input type="text" class="form-control input-rupiah" id="editTerminJumlah" name="jumlah" placeholder="0" required>
                         </div>
                         <div class="col-md-6">
                             <label for="editTerminTgl" class="form-label">Tanggal <span style="color:#EF4444;">*</span></label>
@@ -266,13 +265,38 @@ $pct_terbayar = $project->biaya_total > 0 ? min(100, ($project->total_terbayar /
 <script>
 var deletePaymentId = null;
 
+// Auto-format angka dengan titik ribuan
+$(document).on('keyup', '.input-rupiah', function(e) {
+    var value = $(this).val().replace(/[^,\d]/g, '');
+    var split = value.split(',');
+    var sisa = split[0].length % 3;
+    var rupiah = split[0].substr(0, sisa);
+    var ribuan = split[0].substr(sisa).match(/\d{3}/gi);
+    if (ribuan) {
+        var separator = sisa ? '.' : '';
+        rupiah += separator + ribuan.join('.');
+    }
+    $(this).val(rupiah);
+});
+
 // ── SUBMIT Termin ──
 $('#formTermin').on('submit', function(e) {
     e.preventDefault();
+    
+    var inputJumlah = $(this).find('.input-rupiah');
+    var angkaBersih = inputJumlah.val().replace(/\./g, '');
+    inputJumlah.val(angkaBersih);
+
+    var formData = $(this).serialize();
+    inputJumlah.val(angkaBersih.replace(/\B(?=(\d{3})+(?!\d))/g, "."));
+
     var btn = $('#btnSimpanTermin');
     btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-1"></span>Menyimpan...');
     $.ajax({
-        url: BASE_URL + 'projects/add_payment', type: 'POST', data: $(this).serialize(), dataType: 'json',
+        url: BASE_URL + 'projects/add_payment', 
+        type: 'POST', 
+        data: formData, 
+        dataType: 'json',
         success: function(res) {
             if (res.status === 'success') {
                 showToast(res.message, 'success');
@@ -299,7 +323,11 @@ $(document).on('click', '.btn-edit-payment', function() {
                 $('#editTerminId').val(d.id);
                 $('#editTerminNama').val(d.nama_pembayaran);
                 $('#editTerminJenis').val(d.jenis);
-                $('#editTerminJumlah').val(d.jumlah);
+                
+                // Format ulang data dari database agar bertitik saat masuk ke form edit
+                var jumlahFormatted = d.jumlah.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+                $('#editTerminJumlah').val(jumlahFormatted);
+                
                 $('#editTerminTgl').val(d.tgl);
                 $('#editTerminKet').val(d.keterangan || '');
                 $('#modalEditTermin').modal('show');
@@ -311,13 +339,21 @@ $(document).on('click', '.btn-edit-payment', function() {
 // ── UPDATE Termin ──
 $('#formEditTermin').on('submit', function(e) {
     e.preventDefault();
+    
+    var inputJumlah = $(this).find('.input-rupiah');
+    var angkaBersih = inputJumlah.val().replace(/\./g, '');
+    inputJumlah.val(angkaBersih);
+    
+    var formData = $(this).serialize();
+    inputJumlah.val(angkaBersih.replace(/\B(?=(\d{3})+(?!\d))/g, "."));
+
     var id = $('#editTerminId').val();
     var btn = $('#btnUpdateTermin');
     btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-1"></span>Menyimpan...');
     $.ajax({
         url: BASE_URL + 'projects/update_payment/' + id,
         type: 'POST',
-        data: $(this).serialize(),
+        data: formData,
         dataType: 'json',
         success: function(res) {
             if (res.status === 'success') {

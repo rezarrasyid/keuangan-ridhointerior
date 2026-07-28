@@ -67,7 +67,7 @@ class Projects extends MY_Controller {
 
         $this->form_validation->set_rules('nama_project', 'Nama Proyek', 'required|trim');
         $this->form_validation->set_rules('client_id', 'Klien', 'required|integer');
-        $this->form_validation->set_rules('biaya_total', 'Biaya Total', 'required|decimal');
+        $this->form_validation->set_rules('biaya_total', 'Biaya Total', 'required|numeric');
 
         if ($this->form_validation->run() === FALSE) {
             $this->json_response(['status' => 'error', 'message' => validation_errors()], 422);
@@ -140,7 +140,7 @@ class Projects extends MY_Controller {
 
         $this->form_validation->set_rules('project_id', 'Proyek', 'required|integer');
         $this->form_validation->set_rules('nama_pembayaran', 'Nama Pembayaran', 'required|trim');
-        $this->form_validation->set_rules('jumlah', 'Jumlah', 'required|decimal');
+        $this->form_validation->set_rules('jumlah', 'Jumlah', 'required|numeric');
         $this->form_validation->set_rules('tgl', 'Tanggal', 'required');
         $this->form_validation->set_rules('jenis', 'Jenis', 'required|in_list[DP,Termin]');
 
@@ -219,7 +219,7 @@ class Projects extends MY_Controller {
         if (!$this->input->is_ajax_request()) show_404();
 
         $this->form_validation->set_rules('nama_pembayaran', 'Nama Pembayaran', 'required|trim');
-        $this->form_validation->set_rules('jumlah', 'Jumlah', 'required|decimal');
+        $this->form_validation->set_rules('jumlah', 'Jumlah', 'required|numeric');
         $this->form_validation->set_rules('tgl', 'Tanggal', 'required');
         $this->form_validation->set_rules('jenis', 'Jenis', 'required|in_list[DP,Termin]');
 

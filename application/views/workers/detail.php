@@ -236,7 +236,7 @@
                             <option value="Tarik_Tunai">➖ Tarik Tunai</option>
                         </select>
                     </div>
-                    <div class="mb-3" id="wrapDetailProject">
+                    <div class="mb-3" id="wrapEditProject">
                         <label for="editLedgerProject" class="form-label">Proyek Terkait (Opsional)</label>
                         <select class="form-select" id="editLedgerProject" name="project_id">
                             <option value="">-- Tidak Terkait Proyek --</option>
@@ -424,5 +424,36 @@ $('#btnKonfirmasiHapusLedger').on('click', function() {
             btn.prop('disabled', false);
         }
     });
+});
+
+// 1. INISIALISASI SELECT2 SAAT MODAL TERBUKA (Solusi anti-error untuk Bootstrap)
+$('#modalLedgerDetail').on('shown.bs.modal', function () {
+    $('#detailProject').select2({ dropdownParent: $('#modalLedgerDetail'), width: '100%' });
+});
+
+$('#modalEditLedger').on('shown.bs.modal', function () {
+    $('#editLedgerProject').select2({ dropdownParent: $('#modalEditLedger'), width: '100%' });
+});
+
+$('#modalLedger').on('shown.bs.modal', function () {
+    $('#ledgerProject').select2({ dropdownParent: $('#modalLedger'), width: '100%' });
+});
+
+// 2. FUNGSI SEMBUNYIKAN PROYEK JIKA TARIK TUNAI
+function toggleProyek(jenisSelect, wrapId, selectId) {
+    if ($(jenisSelect).val() === 'Tarik_Tunai') {
+        $(wrapId).slideUp(200); 
+        // Kosongkan dan update tampilan Select2
+        $(selectId).val('').trigger('change.select2'); 
+    } else {
+        $(wrapId).slideDown(200);
+    }
+}
+
+// 3. PASANG EVENT LISTENER SAAT JENIS TRANSAKSI DIUBAH
+$(document).ready(function() {
+    $('#detailJenis').on('change', function() { toggleProyek(this, '#wrapDetailProject', '#detailProject'); });
+    $('#ledgerJenis').on('change', function() { toggleProyek(this, '#wrapLedgerProject', '#ledgerProject'); });
+    $('#editLedgerJenis').on('change', function() { toggleProyek(this, '#wrapEditProject', '#editLedgerProject'); });
 });
 </script>
