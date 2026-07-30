@@ -154,7 +154,7 @@
                     <div class="row g-3 mb-3">
                         <div class="col-md-6">
                             <label for="expenseJumlah" class="form-label">Jumlah (Rp) <span style="color:#EF4444;">*</span></label>
-                            <input type="number" class="form-control" id="expenseJumlah" name="jumlah" min="1" step="1000" placeholder="0" required>
+                            <input type="text" class="form-control input-rupiah" id="expenseJumlah" name="jumlah" placeholder="0" required>
                         </div>
                         <div class="col-md-6">
                             <label for="expenseTgl" class="form-label">Tanggal <span style="color:#EF4444;">*</span></label>
@@ -203,27 +203,62 @@
 <script>
 var deleteExpenseId = null;
 
+// ── AUTO-FORMAT RUPIAH ──
+$(document).on('keyup', '.input-rupiah', function(e) {
+    var value = $(this).val().replace(/[^,\d]/g, '');
+    var split = value.split(',');
+    var sisa = split[0].length % 3;
+    var rupiah = split[0].substr(0, sisa);
+    var ribuan = split[0].substr(sisa).match(/\d{3}/gi);
+    if (ribuan) {
+        var separator = sisa ? '.' : '';
+        rupiah += separator + ribuan.join('.');
+    }
+    $(this).val(rupiah);
+});
+
+// ── INISIALISASI SELECT2 SAAT MODAL TERBUKA ──
+$('#modalExpense').on('shown.bs.modal', function () {
+    $('#expenseKategori').select2({ dropdownParent: $('#modalExpense'), width: '100%' });
+    $('#expenseProject').select2({ dropdownParent: $('#modalExpense'), width: '100%' });
+});
+
 // Reset modal saat dibuka untuk tambah
 $('#btnTambahPengeluaran').on('click', function() {
     $('#formExpense')[0].reset();
     $('#expenseId').val('');
+    
+    // Reset Select2 ke state awal
+    $('#expenseKategori').val('').trigger('change.select2');
+    $('#expenseProject').val('').trigger('change.select2');
+    
     $('#modalExpenseLabel').html('<i class="bi bi-arrow-up-right-circle-fill me-2"></i>Catat Pengeluaran');
     $('#btnSimpanExpense span').text('Simpan');
 });
 
-// TAMBAH / EDIT Submit
+// ── TAMBAH / EDIT Submit ──
 $('#formExpense').on('submit', function(e) {
     e.preventDefault();
     var id   = $('#expenseId').val();
     var url  = id ? BASE_URL + 'expenses/update/' + id : BASE_URL + 'expenses/store';
-    var btn  = $('#btnSimpanExpense');
+    
+    // Bersihkan titik dari angka sebelum dikirim ke server
+    var inputJumlah = $(this).find('.input-rupiah');
+    var angkaBersih = inputJumlah.val().replace(/\./g, '');
+    inputJumlah.val(angkaBersih);
 
+    var formData = $(this).serialize();
+    
+    // Kembalikan titik di tampilan form jika proses loading AJAX memakan waktu
+    inputJumlah.val(angkaBersih.replace(/\B(?=(\d{3})+(?!\d))/g, "."));
+
+    var btn  = $('#btnSimpanExpense');
     btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-1"></span>Menyimpan...');
 
     $.ajax({
         url: url,
         type: 'POST',
-        data: $(this).serialize(),
+        data: formData,
         dataType: 'json',
         success: function(res) {
             if (res.status === 'success') {
@@ -240,7 +275,7 @@ $('#formExpense').on('submit', function(e) {
     });
 });
 
-// EDIT Click
+// ── EDIT Click ──
 $(document).on('click', '.btn-edit-expense', function() {
     var id = $(this).data('id');
     $.ajax({
@@ -251,9 +286,15 @@ $(document).on('click', '.btn-edit-expense', function() {
             if (res.status === 'success') {
                 var d = res.data;
                 $('#expenseId').val(d.id);
-                $('#expenseKategori').val(d.kategori);
-                $('#expenseProject').val(d.project_id || '');
-                $('#expenseJumlah').val(d.jumlah);
+                
+                // Set nilai dan trigger perubahan untuk Select2
+                $('#expenseKategori').val(d.kategori).trigger('change.select2');
+                $('#expenseProject').val(d.project_id || '').trigger('change.select2');
+                
+                // Format angka dari database menggunakan titik
+                var jumlahFormatted = d.jumlah.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+                $('#expenseJumlah').val(jumlahFormatted);
+                
                 $('#expenseTgl').val(d.tgl);
                 $('#expenseKeterangan').val(d.keterangan || '');
                 $('#modalExpenseLabel').html('<i class="bi bi-pencil-fill me-2"></i>Edit Pengeluaran');
@@ -264,7 +305,7 @@ $(document).on('click', '.btn-edit-expense', function() {
     });
 });
 
-// DELETE Click
+// ── DELETE Click ──
 $(document).on('click', '.btn-delete-expense', function() {
     deleteExpenseId = $(this).data('id');
     $('#modalHapusExpense').modal('show');

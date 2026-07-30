@@ -37,8 +37,20 @@ $seg1 = $this->uri->segment(1);
         <i class="bi bi-kanban-fill"></i> Proyek & Termin
     </a>
     <a href="<?= base_url('expenses') ?>" class="nav-link <?= $seg1 === 'expenses' ? 'active' : '' ?>">
-        <i class="bi bi-arrow-up-right-circle-fill"></i> Pengeluaran
+        <i class="bi bi-cash-stack"></i> Pengeluaran
     </a>
+
+    <!-- ... menu keuangan (pengeluaran) sebelumnya ... -->
+
+    <?php if (isset($user) && $user['role'] === 'superadmin'): ?>
+    <div class="nav-section-label">Superadmin Area</div>
+    <a href="<?= base_url('dashboard/pusat') ?>" class="nav-link <?= $seg1 === 'dashboard' && $this->uri->segment(2) === 'pusat' ? 'active' : '' ?>">
+        <i class="bi bi-globe"></i> Dashboard Pusat
+    </a>
+    <a href="<?= base_url('workshops') ?>" class="nav-link <?= $seg1 === 'workshops' ? 'active' : '' ?>">
+        <i class="bi bi-shop"></i> Manajemen Workshop
+    </a>
+    <?php endif; ?>
 
     <div class="nav-section-label" style="margin-top:auto;"></div>
 

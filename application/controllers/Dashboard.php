@@ -12,113 +12,133 @@ class Dashboard extends MY_Controller {
     public function index()
     {
         $wid  = $this->workshop_id;
-        $year = $this->input->get('year') ? (int)$this->input->get('year') : (int)date('Y');
+        
+        // Default: Tanggal 1 bulan ini s/d Hari ini
+        $start_date = $this->input->get('start_date') ? $this->input->get('start_date') : date('Y-m-01');
+        $end_date   = $this->input->get('end_date') ? $this->input->get('end_date') : date('Y-m-t');
 
         $data['title']             = 'Dashboard - Ridho Interior';
-        $data['total_pemasukan']   = $this->Dashboard_model->get_total_pemasukan_month($wid);
-        $data['total_pengeluaran'] = $this->Dashboard_model->get_total_pengeluaran_month($wid);
+        $data['start_date']        = $start_date;
+        $data['end_date']          = $end_date;
+        
+        $data['total_pemasukan']   = $this->Dashboard_model->get_total_pemasukan_range($wid, $start_date, $end_date);
+        $data['total_pengeluaran'] = $this->Dashboard_model->get_total_pengeluaran_range($wid, $start_date, $end_date);
         $data['saldo_tukang']      = $this->Dashboard_model->get_total_saldo_tukang($wid);
         $data['proyek_aktif']      = $this->Dashboard_model->get_total_proyek_aktif($wid);
         $data['top_clients']       = $this->Client_model->get_top_clients($wid, 5);
-        $data['year']              = $year;
-        $data['yearly_recap']      = $this->Dashboard_model->get_yearly_recap($wid, $year);
 
         $this->load_view('dashboard/index', $data);
     }
 
     /**
-     * Endpoint AJAX untuk data Chart.js
-     * Returns JSON: { labels, pemasukan, pengeluaran }
+     * Endpoint AJAX untuk data Chart.js (Format Harian)
      */
     public function chart_data()
     {
-        $wid  = $this->workshop_id;
-        $year = $this->input->get('year') ? (int)$this->input->get('year') : (int)date('Y');
+        $wid = $this->workshop_id;
+        $start_date = $this->input->get('start_date') ? $this->input->get('start_date') : date('Y-m-01');
+        $end_date   = $this->input->get('end_date') ? $this->input->get('end_date') : date('Y-m-t');
 
-        $months_id = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+        $raw_income  = $this->Dashboard_model->get_daily_income($wid, $start_date, $end_date);
+        $raw_expense = $this->Dashboard_model->get_daily_expense($wid, $start_date, $end_date);
 
-        // Init array 12 bulan dengan 0
-        $pemasukan   = array_fill(1, 12, 0);
-        $pengeluaran = array_fill(1, 12, 0);
-
-        $raw_income  = $this->Dashboard_model->get_monthly_income($wid, $year);
-        $raw_expense = $this->Dashboard_model->get_monthly_expense($wid, $year);
-
+        // Buat lookup array agar mapping tanggal lebih cepat
+        $inc_lookup = [];
         foreach ($raw_income as $row) {
-            $pemasukan[(int)$row->bulan] = (float)$row->total;
+            $inc_lookup[$row->tgl] = (float)$row->total;
         }
+
+        $exp_lookup = [];
         foreach ($raw_expense as $row) {
-            $pengeluaran[(int)$row->bulan] = (float)$row->total;
+            $exp_lookup[$row->tgl] = (float)$row->total;
         }
 
-        $response = [
-            'labels'      => $months_id,
-            'pemasukan'   => array_values($pemasukan),
-            'pengeluaran' => array_values($pengeluaran),
-            'year'        => $year,
-        ];
+        $labels      = [];
+        $pemasukan   = [];
+        $pengeluaran = [];
 
-        $this->json_response($response);
+        // Loop dari start_date sampai end_date untuk sumbu X
+        $current_time = strtotime($start_date);
+        $end_time     = strtotime($end_date);
+
+        while ($current_time <= $end_time) {
+            $date_str = date('Y-m-d', $current_time);
+            
+            // Format label: "01 Jul"
+            $labels[] = date('d M', $current_time); 
+            
+            $pemasukan[]   = isset($inc_lookup[$date_str]) ? $inc_lookup[$date_str] : 0;
+            $pengeluaran[] = isset($exp_lookup[$date_str]) ? $exp_lookup[$date_str] : 0;
+            
+            // Tambah 1 hari
+            $current_time = strtotime('+1 day', $current_time);
+        }
+
+        $this->json_response([
+            'labels'      => $labels,
+            'pemasukan'   => $pemasukan,
+            'pengeluaran' => $pengeluaran
+        ]);
     }
 
     /**
-     * Cetak Laporan Rekap Tahunan (PDF)
+     * DASHBOARD PUSAT (Global) - Hanya untuk Superadmin
      */
-    public function print_pdf($year)
+    public function pusat()
     {
-        $wid  = $this->workshop_id;
-        $year = (int)$year;
+        if (!isset($this->session->userdata['user']) || $this->session->userdata['user']['role'] !== 'superadmin') {
+            show_error('Akses Ditolak. Halaman ini hanya untuk Superadmin.', 403);
+        }
+
+        $start_date = $this->input->get('start_date') ? $this->input->get('start_date') : date('Y-m-01');
+        $end_date   = $this->input->get('end_date') ? $this->input->get('end_date') : date('Y-m-t');
+
+        $data['title']             = 'Dashboard Pusat - Semua Cabang';
+        $data['start_date']        = $start_date;
+        $data['end_date']          = $end_date;
         
-        $ws = $this->db->where('id', $wid)->get('workshops')->row();
-        $data['workshop_name']   = $ws ? $ws->nama_workshop : 'Ridho Interior';
-        $data['workshop_alamat'] = $ws ? $ws->alamat : '';
-        $data['year']            = $year;
-        $data['recap']           = $this->Dashboard_model->get_yearly_recap($wid, $year);
-        $data['title']           = 'Laporan Tahunan Keuangan - ' . $year;
+        $data['total_pemasukan']   = $this->Dashboard_model->get_global_pemasukan_range($start_date, $end_date);
+        $data['total_pengeluaran'] = $this->Dashboard_model->get_global_pengeluaran_range($start_date, $end_date);
+        $data['saldo_tukang']      = $this->Dashboard_model->get_global_saldo_tukang();
+        $data['proyek_aktif']      = $this->Dashboard_model->get_global_proyek_aktif();
         
-        $this->load->view('dashboard/print_pdf', $data);
+        // Data breakdown performa tiap cabang
+        $data['performa_cabang']   = $this->Dashboard_model->get_performa_cabang($start_date, $end_date);
+
+        $this->load_view('dashboard/pusat', $data);
     }
 
     /**
-     * Cetak Laporan Rekap Bulanan Detail (PDF)
+     * Endpoint AJAX Chart untuk Dashboard Pusat
      */
-    public function print_monthly_pdf($month, $year)
+    public function chart_data_pusat()
     {
-        $wid   = $this->workshop_id;
-        $month = (int)$month;
-        $year  = (int)$year;
-        
-        $ws = $this->db->where('id', $wid)->get('workshops')->row();
-        $data['workshop_name']   = $ws ? $ws->nama_workshop : 'Ridho Interior';
-        $data['workshop_alamat'] = $ws ? $ws->alamat : '';
-        $data['month']           = $month;
-        $data['year']            = $year;
-        
-        // Data Pemasukan Detail (project_payments)
-        $sql_income = "
-            SELECT pp.tgl, pp.nama_pembayaran, pp.jumlah, pp.jenis, p.nama_project, c.nama AS nama_client
-            FROM project_payments pp
-            JOIN projects p ON p.id = pp.project_id
-            JOIN clients c ON c.id = p.client_id
-            WHERE p.workshop_id = ? AND MONTH(pp.tgl) = ? AND YEAR(pp.tgl) = ?
-            ORDER BY pp.tgl ASC
-        ";
-        $data['incomes'] = $this->db->query($sql_income, [$wid, $month, $year])->result();
-        
-        // Data Pengeluaran Detail (expenses)
-        $sql_expense = "
-            SELECT e.tgl, e.kategori, e.keterangan, e.jumlah, p.nama_project
-            FROM expenses e
-            LEFT JOIN projects p ON p.id = e.project_id
-            WHERE e.workshop_id = ? AND MONTH(e.tgl) = ? AND YEAR(e.tgl) = ?
-            ORDER BY e.tgl ASC
-        ";
-        $data['expenses'] = $this->db->query($sql_expense, [$wid, $month, $year])->result();
-        
-        $months_id = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
-        $data['month_name'] = $months_id[$month - 1];
-        $data['title'] = 'Laporan Bulanan Keuangan - ' . $data['month_name'] . ' ' . $year;
-        
-        $this->load->view('dashboard/print_monthly_pdf', $data);
+        if (!isset($this->session->userdata['user']) || $this->session->userdata['user']['role'] !== 'superadmin') {
+            $this->json_response(['status' => 'error'], 403);
+            return;
+        }
+
+        $start_date = $this->input->get('start_date') ? $this->input->get('start_date') : date('Y-m-01');
+        $end_date   = $this->input->get('end_date') ? $this->input->get('end_date') : date('Y-m-t');
+
+        $raw_income  = $this->Dashboard_model->get_daily_income_global($start_date, $end_date);
+        $raw_expense = $this->Dashboard_model->get_daily_expense_global($start_date, $end_date);
+
+        $inc_lookup = []; foreach ($raw_income as $row) { $inc_lookup[$row->tgl] = (float)$row->total; }
+        $exp_lookup = []; foreach ($raw_expense as $row) { $exp_lookup[$row->tgl] = (float)$row->total; }
+
+        $labels = []; $pemasukan = []; $pengeluaran = [];
+        $current_time = strtotime($start_date);
+        $end_time     = strtotime($end_date);
+
+        while ($current_time <= $end_time) {
+            $date_str = date('Y-m-d', $current_time);
+            $labels[] = date('d M', $current_time); 
+            $pemasukan[]   = isset($inc_lookup[$date_str]) ? $inc_lookup[$date_str] : 0;
+            $pengeluaran[] = isset($exp_lookup[$date_str]) ? $exp_lookup[$date_str] : 0;
+            $current_time = strtotime('+1 day', $current_time);
+        }
+
+        $this->json_response(['labels' => $labels, 'pemasukan' => $pemasukan, 'pengeluaran' => $pengeluaran]);
     }
 }

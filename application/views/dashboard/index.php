@@ -5,18 +5,19 @@ function fmt($n) {
 ?>
 
 <!-- Page Header -->
-<div class="page-header">
+<div class="page-header flex-wrap">
     <div>
         <h1>Dashboard</h1>
-        <p>Ringkasan keuangan workshop bulan <?= date('F Y') ?></p>
+        <p>Ringkasan keuangan dari <?= date('d M Y', strtotime($start_date)) ?> s/d <?= date('d M Y', strtotime($end_date)) ?></p>
     </div>
-    <div style="display:flex;align-items:center;gap:10px;">
-        <label for="chartYear" style="font-size:0.825rem;font-weight:600;color:#374151;margin:0;">Tahun Grafik:</label>
-        <select id="chartYear" class="form-select form-select-sm" style="width:100px;">
-            <?php for ($y = date('Y'); $y >= date('Y') - 3; $y--): ?>
-                <option value="<?= $y ?>" <?= $y == date('Y') ? 'selected' : '' ?>><?= $y ?></option>
-            <?php endfor; ?>
-        </select>
+    <!-- Filter Date Range -->
+    <div style="display:flex;align-items:center;gap:10px;background:#fff;padding:8px 12px;border-radius:10px;border:1px solid var(--border);">
+        <input type="date" id="filterStart" class="form-control form-control-sm" value="<?= $start_date ?>" style="width:120px;border:none;background:#F1F5F9;">
+        <span style="font-size:0.8rem;color:#6B7280;font-weight:600;">s/d</span>
+        <input type="date" id="filterEnd" class="form-control form-control-sm" value="<?= $end_date ?>" style="width:120px;border:none;background:#F1F5F9;">
+        <button id="btnFilter" class="btn btn-primary btn-sm ms-1" title="Terapkan Filter">
+            <i class="bi bi-search"></i>
+        </button>
     </div>
 </div>
 
@@ -29,7 +30,7 @@ function fmt($n) {
                 <i class="bi bi-arrow-down-circle-fill"></i>
             </div>
             <div class="stat-value"><?= fmt($total_pemasukan) ?></div>
-            <div class="stat-label">Pemasukan Bulan Ini</div>
+            <div class="stat-label">Pemasukan Periode Ini</div>
         </div>
     </div>
     <!-- Total Pengeluaran -->
@@ -39,7 +40,7 @@ function fmt($n) {
                 <i class="bi bi-arrow-up-circle-fill"></i>
             </div>
             <div class="stat-value"><?= fmt($total_pengeluaran) ?></div>
-            <div class="stat-label">Pengeluaran Bulan Ini</div>
+            <div class="stat-label">Pengeluaran Periode Ini</div>
         </div>
     </div>
     <!-- Net Cashflow -->
@@ -50,7 +51,7 @@ function fmt($n) {
                 <i class="bi bi-wallet2"></i>
             </div>
             <div class="stat-value" style="color:<?= $net >= 0 ? '#1E40AF' : '#92400E' ?>;"><?= fmt($net) ?></div>
-            <div class="stat-label">Net Cashflow Bulan Ini</div>
+            <div class="stat-label">Cashflow Periode Ini</div>
         </div>
     </div>
     <!-- Saldo Tukang & Proyek Aktif -->
@@ -71,14 +72,14 @@ function fmt($n) {
     <div class="col-xl-8">
         <div class="card h-100">
             <div class="card-header d-flex align-items-center justify-content-between">
-                <h5><i class="bi bi-bar-chart-fill me-2" style="color:var(--primary-light);"></i>Pemasukan vs Pengeluaran</h5>
-                <span id="chartYearLabel" class="badge" style="background:#EFF6FF;color:#1E40AF;font-size:0.75rem;padding:5px 10px;border-radius:20px;"></span>
+                <h5><i class="bi bi-bar-chart-fill me-2" style="color:var(--primary-light);"></i>Grafik Keuangan Harian</h5>
+                <span id="chartRangeLabel" class="badge" style="background:#EFF6FF;color:#1E40AF;font-size:0.75rem;padding:5px 10px;border-radius:20px;"></span>
             </div>
             <div class="card-body" style="padding:20px;">
-                <div style="position:relative;height:300px;">
+                <div id="chartContainer" style="position:relative;height:300px;display:none;">
                     <canvas id="financeChart"></canvas>
                 </div>
-                <div id="chartLoader" style="text-align:center;padding:40px;display:none;">
+                <div id="chartLoader" style="text-align:center;padding:40px;">
                     <div class="spinner-border text-primary" style="width:28px;height:28px;"></div>
                     <p style="margin:10px 0 0;font-size:0.825rem;color:#6B7280;">Memuat data grafik...</p>
                 </div>
@@ -90,7 +91,7 @@ function fmt($n) {
     <div class="col-xl-4">
         <div class="card h-100">
             <div class="card-header">
-                <h5><i class="bi bi-trophy-fill me-2" style="color:#F59E0B;"></i>Top Client</h5>
+                <h5><i class="bi bi-trophy-fill me-2" style="color:#F59E0B;"></i>Top Client (Keseluruhan)</h5>
             </div>
             <div class="card-body" style="padding:0;">
                 <?php if (empty($top_clients)): ?>
@@ -121,117 +122,118 @@ function fmt($n) {
     </div>
 </div>
 
-<!-- ── Proyek Aktif Info ── -->
-<div class="row g-3 mt-1">
-    <div class="col-12">
-        <div class="card">
-            <div class="card-body d-flex align-items-center gap-3" style="padding:16px 20px;">
-                <div style="width:44px;height:44px;background:#DBEAFE;border-radius:12px;display:flex;align-items:center;justify-content:center;">
-                    <i class="bi bi-kanban-fill" style="font-size:1.2rem;color:var(--primary);"></i>
-                </div>
-                <div>
-                    <div style="font-size:1.4rem;font-weight:800;color:var(--primary);"><?= $proyek_aktif ?> Proyek Aktif</div>
-                    <div style="font-size:0.825rem;color:#6B7280;">sedang berjalan di workshop ini</div>
-                </div>
-                <a href="<?= base_url('projects') ?>" class="btn btn-primary ms-auto" style="padding:8px 18px;">
-                    <i class="bi bi-arrow-right me-1"></i> Lihat Proyek
-                </a>
-            </div>
-        </div>
-    </div>
-</div>
-
 <script>
+// ── Handle Filter URL ──
+$('#btnFilter').on('click', function() {
+    var start = $('#filterStart').val();
+    var end   = $('#filterEnd').val();
+    if(start && end) {
+        window.location.href = BASE_URL + 'dashboard?start_date=' + start + '&end_date=' + end;
+    }
+});
+
 // ── Chart.js Setup ──
 var chartInstance = null;
 
-function loadChart(year) {
+function loadChart(start, end) {
     $('#chartLoader').show();
-    $('#financeChart').hide();
-    $('#chartYearLabel').text('Tahun ' + year);
+    $('#chartContainer').hide();
+    
+    // Format label kecil di atas grafik
+    $('#chartRangeLabel').text(start + ' s/d ' + end);
 
-    $.getJSON(BASE_URL + 'dashboard/chart_data', { year: year }, function(res) {
-        $('#chartLoader').hide();
-        $('#financeChart').show();
+    // Menggunakan $.ajax agar lebih mudah menangkap error
+    $.ajax({
+        url: BASE_URL + 'dashboard/chart_data',
+        type: 'GET',
+        data: { start_date: start, end_date: end },
+        dataType: 'json',
+        success: function(res) {
+            $('#chartLoader').hide();
+            $('#chartContainer').show();
 
-        if (chartInstance) chartInstance.destroy();
+            if (chartInstance) chartInstance.destroy();
 
-        var ctx = document.getElementById('financeChart').getContext('2d');
-        chartInstance = new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: res.labels,
-                datasets: [
-                    {
-                        label: 'Pemasukan',
-                        data: res.pemasukan,
-                        backgroundColor: 'rgba(16,185,129,0.8)',
-                        borderColor: '#10B981',
-                        borderWidth: 2,
-                        borderRadius: 6,
-                        borderSkipped: false,
-                    },
-                    {
-                        label: 'Pengeluaran',
-                        data: res.pengeluaran,
-                        backgroundColor: 'rgba(239,68,68,0.8)',
-                        borderColor: '#EF4444',
-                        borderWidth: 2,
-                        borderRadius: 6,
-                        borderSkipped: false,
-                    }
-                ]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        position: 'top',
-                        labels: {
-                            usePointStyle: true,
-                            pointStyle: 'circle',
-                            font: { family: 'Inter', size: 12, weight: '600' },
-                            padding: 20,
+            var ctx = document.getElementById('financeChart').getContext('2d');
+            chartInstance = new Chart(ctx, {
+                type: 'line', // Ganti ke line chart lebih cocok untuk harian
+                data: {
+                    labels: res.labels,
+                    datasets: [
+                        {
+                            label: 'Pemasukan',
+                            data: res.pemasukan,
+                            backgroundColor: 'rgba(16,185,129,0.1)',
+                            borderColor: '#10B981',
+                            borderWidth: 2,
+                            fill: true,
+                            tension: 0.3, // Membuat garis lebih melengkung
+                            pointRadius: 3
+                        },
+                        {
+                            label: 'Pengeluaran',
+                            data: res.pengeluaran,
+                            backgroundColor: 'rgba(239,68,68,0.1)',
+                            borderColor: '#EF4444',
+                            borderWidth: 2,
+                            fill: true,
+                            tension: 0.3,
+                            pointRadius: 3
                         }
-                    },
-                    tooltip: {
-                        callbacks: {
-                            label: function(ctx) {
-                                return ' ' + ctx.dataset.label + ': Rp ' + ctx.parsed.y.toLocaleString('id-ID');
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                            labels: {
+                                usePointStyle: true,
+                                font: { family: 'Inter', size: 12, weight: '600' }
                             }
                         },
-                        backgroundColor: '#1F2937',
-                        titleFont: { family: 'Inter', size: 12 },
-                        bodyFont: { family: 'Inter', size: 12 },
-                        padding: 12,
-                        cornerRadius: 8,
-                    }
-                },
-                scales: {
-                    x: {
-                        grid: { display: false },
-                        ticks: { font: { family: 'Inter', size: 11 }, color: '#6B7280' }
+                        tooltip: {
+                            backgroundColor: '#1F2937',
+                            padding: 12,
+                            cornerRadius: 8,
+                            callbacks: {
+                                label: function(ctx) {
+                                    return ' ' + ctx.dataset.label + ': Rp ' + ctx.parsed.y.toLocaleString('id-ID');
+                                }
+                            }
+                        }
                     },
-                    y: {
-                        grid: { color: '#F3F4F6' },
-                        ticks: {
-                            font: { family: 'Inter', size: 11 },
-                            color: '#6B7280',
-                            callback: function(val) { return 'Rp ' + (val/1000000).toFixed(0) + 'Jt'; }
+                    scales: {
+                        x: {
+                            grid: { display: false },
+                            ticks: { font: { family: 'Inter', size: 11 }, color: '#6B7280' }
+                        },
+                        y: {
+                            grid: { color: '#F3F4F6' },
+                            beginAtZero: true,
+                            ticks: {
+                                font: { family: 'Inter', size: 11 },
+                                color: '#6B7280',
+                                callback: function(val) { return 'Rp ' + (val/1000000).toFixed(0) + 'Jt'; }
+                            }
                         }
                     }
                 }
-            }
-        });
+            });
+        },
+        error: function(xhr, status, error) {
+            $('#chartLoader').hide();
+            // Pesan error dari global ajaxSetup sudah cukup
+            console.error("Gagal memuat grafik:", error);
+        }
     });
 }
 
-// Initial load
-loadChart($('#chartYear').val());
-
-// Reload chart on year change
-$('#chartYear').on('change', function() {
-    loadChart($(this).val());
+// Initial load menggunakan value dari input PHP
+$(document).ready(function() {
+    var initialStart = $('#filterStart').val();
+    var initialEnd   = $('#filterEnd').val();
+    loadChart(initialStart, initialEnd);
 });
 </script>

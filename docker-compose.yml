@@ -9,6 +9,7 @@ services:
       - .:/var/www/html
     depends_on:
       - db
+
   db:
     image: mysql:5.7
     environment:
@@ -16,6 +17,11 @@ services:
       MYSQL_DATABASE: db_ridhointerior
     ports:
       - "3306:3306"
+    # --- TAMBAHKAN 2 BARIS INI ---
+    volumes:
+      - mysql_data:/var/lib/mysql
+    # -----------------------------
+
   phpmyadmin:
     image: phpmyadmin/phpmyadmin
     ports:
@@ -25,3 +31,7 @@ services:
       MYSQL_ROOT_PASSWORD: root
     depends_on:
       - db
+
+# --- TAMBAHKAN 2 BARIS INI DI PALING BAWAH ---
+volumes:
+  mysql_data: # ---------------------------------------------

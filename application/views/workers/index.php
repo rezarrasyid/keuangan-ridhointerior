@@ -214,7 +214,7 @@
                     <div class="row g-3">
                         <div class="col-md-6">
                             <label for="ledgerJumlah" class="form-label">Jumlah (Rp) <span style="color:#EF4444;">*</span></label>
-                            <input type="number" class="form-control" id="ledgerJumlah" name="jumlah" min="1" step="1000" placeholder="0" required>
+                            <input type="text" class="form-control input-rupiah" id="ledgerJumlah" name="jumlah" placeholder="0" required>
                         </div>
                         <div class="col-md-6">
                             <label for="ledgerTgl" class="form-label">Tanggal <span style="color:#EF4444;">*</span></label>
@@ -261,6 +261,20 @@
 
 <script>
 var deleteTukangId = null;
+
+// ── AUTO-FORMAT RUPIAH ──
+$(document).on('keyup', '.input-rupiah', function(e) {
+    var value = $(this).val().replace(/[^,\d]/g, '');
+    var split = value.split(',');
+    var sisa = split[0].length % 3;
+    var rupiah = split[0].substr(0, sisa);
+    var ribuan = split[0].substr(sisa).match(/\d{3}/gi);
+    if (ribuan) {
+        var separator = sisa ? '.' : '';
+        rupiah += separator + ribuan.join('.');
+    }
+    $(this).val(rupiah);
+});
 
 // Reset modal tukang
 $('#btnTambahTukang').on('click', function() {
@@ -341,10 +355,21 @@ $('#btnKonfirmasiHapusTukang').on('click', function() {
 // ── SUBMIT Ledger ──
 $('#formLedger').on('submit', function(e) {
     e.preventDefault();
+    
+    // Hilangkan titik sebelum dikirim ke server
+    var inputJumlah = $(this).find('.input-rupiah');
+    var angkaBersih = inputJumlah.val().replace(/\./g, '');
+    inputJumlah.val(angkaBersih);
+
+    var formData = $(this).serialize();
+    
+    // Kembalikan titik di tampilan jika ajax masih loading
+    inputJumlah.val(angkaBersih.replace(/\B(?=(\d{3})+(?!\d))/g, "."));
+
     var btn = $('#btnSimpanLedger');
     btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-1"></span>Menyimpan...');
     $.ajax({
-        url: BASE_URL + 'workers/add_ledger', type: 'POST', data: $(this).serialize(), dataType: 'json',
+        url: BASE_URL + 'workers/add_ledger', type: 'POST', data: formData, dataType: 'json',
         success: function(res) {
             if (res.status === 'success') {
                 showToast(res.message, 'success');
@@ -358,7 +383,7 @@ $('#formLedger').on('submit', function(e) {
     });
 });
 
-// 1. INISIALISASI SELECT2 SAAT MODAL TERBUKA (Solusi anti-error untuk Bootstrap)
+// ── INISIALISASI SELECT2 SAAT MODAL TERBUKA ──
 $('#modalLedgerDetail').on('shown.bs.modal', function () {
     $('#detailProject').select2({ dropdownParent: $('#modalLedgerDetail'), width: '100%' });
 });
@@ -368,25 +393,23 @@ $('#modalEditLedger').on('shown.bs.modal', function () {
 });
 
 $('#modalLedger').on('shown.bs.modal', function () {
-    // Tambahkan baris ini untuk dropdown Tukang
+    // Dropdown Tukang
     $('#ledgerWorker').select2({ dropdownParent: $('#modalLedger'), width: '100%' }); 
-    
-    // Ini yang dropdown Proyek tadi
+    // Dropdown Proyek
     $('#ledgerProject').select2({ dropdownParent: $('#modalLedger'), width: '100%' });
 });
 
-// 2. FUNGSI SEMBUNYIKAN PROYEK JIKA TARIK TUNAI
+// ── FUNGSI SEMBUNYIKAN PROYEK JIKA TARIK TUNAI ──
 function toggleProyek(jenisSelect, wrapId, selectId) {
     if ($(jenisSelect).val() === 'Tarik_Tunai') {
         $(wrapId).slideUp(200); 
-        // Kosongkan dan update tampilan Select2
         $(selectId).val('').trigger('change.select2'); 
     } else {
         $(wrapId).slideDown(200);
     }
 }
 
-// 3. PASANG EVENT LISTENER SAAT JENIS TRANSAKSI DIUBAH
+// ── PASANG EVENT LISTENER SAAT JENIS TRANSAKSI DIUBAH ──
 $(document).ready(function() {
     $('#detailJenis').on('change', function() { toggleProyek(this, '#wrapDetailProject', '#detailProject'); });
     $('#ledgerJenis').on('change', function() { toggleProyek(this, '#wrapLedgerProject', '#ledgerProject'); });

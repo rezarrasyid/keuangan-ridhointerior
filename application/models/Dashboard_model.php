@@ -9,40 +9,40 @@ class Dashboard_model extends CI_Model {
     }
 
     /**
-     * Total pemasukan (project_payments) bulan ini
+     * Total pemasukan (project_payments) berdasarkan rentang tanggal
      */
-    public function get_total_pemasukan_month($workshop_id)
+    public function get_total_pemasukan_range($workshop_id, $start_date, $end_date)
     {
         $sql = "
             SELECT COALESCE(SUM(pp.jumlah), 0) AS total
             FROM project_payments pp
             JOIN projects p ON p.id = pp.project_id
             WHERE p.workshop_id = ?
-              AND MONTH(pp.tgl) = MONTH(CURDATE())
-              AND YEAR(pp.tgl) = YEAR(CURDATE())
+              AND pp.tgl >= ? 
+              AND pp.tgl <= ?
         ";
-        $row = $this->db->query($sql, [$workshop_id])->row();
+        $row = $this->db->query($sql, [$workshop_id, $start_date, $end_date])->row();
         return $row ? $row->total : 0;
     }
 
     /**
-     * Total pengeluaran bulan ini
+     * Total pengeluaran berdasarkan rentang tanggal
      */
-    public function get_total_pengeluaran_month($workshop_id)
+    public function get_total_pengeluaran_range($workshop_id, $start_date, $end_date)
     {
         $sql = "
             SELECT COALESCE(SUM(jumlah), 0) AS total
             FROM expenses
             WHERE workshop_id = ?
-              AND MONTH(tgl) = MONTH(CURDATE())
-              AND YEAR(tgl) = YEAR(CURDATE())
+              AND tgl >= ? 
+              AND tgl <= ?
         ";
-        $row = $this->db->query($sql, [$workshop_id])->row();
+        $row = $this->db->query($sql, [$workshop_id, $start_date, $end_date])->row();
         return $row ? $row->total : 0;
     }
 
     /**
-     * Total saldo upah tukang yang belum diambil
+     * Total saldo upah tukang yang belum diambil (Tetap Kumulatif, tidak terpengaruh filter)
      */
     public function get_total_saldo_tukang($workshop_id)
     {
@@ -58,7 +58,7 @@ class Dashboard_model extends CI_Model {
     }
 
     /**
-     * Jumlah proyek aktif
+     * Jumlah proyek aktif (Tetap berdasarkan status, tidak terpengaruh filter)
      */
     public function get_total_proyek_aktif($workshop_id)
     {
@@ -69,66 +69,98 @@ class Dashboard_model extends CI_Model {
     }
 
     /**
-     * Data pemasukan per bulan untuk Chart
+     * Data pemasukan harian untuk Chart
      */
-    public function get_monthly_income($workshop_id, $year)
+    public function get_daily_income($workshop_id, $start_date, $end_date)
     {
         $sql = "
-            SELECT MONTH(pp.tgl) AS bulan, SUM(pp.jumlah) AS total
+            SELECT DATE(pp.tgl) AS tgl, SUM(pp.jumlah) AS total
             FROM project_payments pp
             JOIN projects p ON p.id = pp.project_id
-            WHERE p.workshop_id = ? AND YEAR(pp.tgl) = ?
-            GROUP BY MONTH(pp.tgl)
-            ORDER BY MONTH(pp.tgl) ASC
+            WHERE p.workshop_id = ? AND pp.tgl >= ? AND pp.tgl <= ?
+            GROUP BY DATE(pp.tgl)
+            ORDER BY DATE(pp.tgl) ASC
         ";
-        return $this->db->query($sql, [$workshop_id, $year])->result();
+        return $this->db->query($sql, [$workshop_id, $start_date, $end_date])->result();
     }
 
     /**
-     * Data pengeluaran per bulan untuk Chart
+     * Data pengeluaran harian untuk Chart
      */
-    public function get_monthly_expense($workshop_id, $year)
+    public function get_daily_expense($workshop_id, $start_date, $end_date)
     {
         $sql = "
-            SELECT MONTH(tgl) AS bulan, SUM(jumlah) AS total
+            SELECT DATE(tgl) AS tgl, SUM(jumlah) AS total
             FROM expenses
-            WHERE workshop_id = ? AND YEAR(tgl) = ?
-            GROUP BY MONTH(tgl)
-            ORDER BY MONTH(tgl) ASC
+            WHERE workshop_id = ? AND tgl >= ? AND tgl <= ?
+            GROUP BY DATE(tgl)
+            ORDER BY DATE(tgl) ASC
         ";
-        return $this->db->query($sql, [$workshop_id, $year])->result();
+        return $this->db->query($sql, [$workshop_id, $start_date, $end_date])->result();
     }
 
-    /**
-     * Rekap bulanan kumulatif (Pemasukan vs Pengeluaran) untuk tahun terpilih
-     */
-    public function get_yearly_recap($workshop_id, $year)
+    // ==========================================================
+    // FUNGSI KHUSUS SUPERADMIN (DASHBOARD PUSAT / GLOBAL)
+    // ==========================================================
+
+    public function get_global_pemasukan_range($start_date, $end_date)
     {
-        $sql = "
-            SELECT 
-                m.bulan,
-                COALESCE(pemasukan.total, 0) AS total_pemasukan,
-                COALESCE(pengeluaran.total, 0) AS total_pengeluaran
-            FROM (
-                SELECT 1 AS bulan UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION 
-                SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION 
-                SELECT 9 UNION SELECT 10 UNION SELECT 11 UNION SELECT 12
-            ) m
-            LEFT JOIN (
-                SELECT MONTH(pp.tgl) AS bulan, SUM(pp.jumlah) AS total
-                FROM project_payments pp
-                JOIN projects p ON p.id = pp.project_id
-                WHERE p.workshop_id = ? AND YEAR(pp.tgl) = ?
-                GROUP BY MONTH(pp.tgl)
-            ) pemasukan ON pemasukan.bulan = m.bulan
-            LEFT JOIN (
-                SELECT MONTH(tgl) AS bulan, SUM(jumlah) AS total
-                FROM expenses
-                WHERE workshop_id = ? AND YEAR(tgl) = ?
-                GROUP BY MONTH(tgl)
-            ) pengeluaran ON pengeluaran.bulan = m.bulan
-            ORDER BY m.bulan ASC
-        ";
-        return $this->db->query($sql, [$workshop_id, $year, $workshop_id, $year])->result();
+        $sql = "SELECT COALESCE(SUM(pp.jumlah), 0) AS total 
+                FROM project_payments pp 
+                WHERE pp.tgl >= ? AND pp.tgl <= ?";
+        $row = $this->db->query($sql, [$start_date, $end_date])->row();
+        return $row ? $row->total : 0;
+    }
+
+    public function get_global_pengeluaran_range($start_date, $end_date)
+    {
+        $sql = "SELECT COALESCE(SUM(jumlah), 0) AS total 
+                FROM expenses 
+                WHERE tgl >= ? AND tgl <= ?";
+        $row = $this->db->query($sql, [$start_date, $end_date])->row();
+        return $row ? $row->total : 0;
+    }
+
+    public function get_global_saldo_tukang()
+    {
+        $sql = "SELECT 
+                    COALESCE(SUM(CASE WHEN jenis = 'Hak_Upah' THEN jumlah ELSE 0 END), 0) -
+                    COALESCE(SUM(CASE WHEN jenis = 'Tarik_Tunai' THEN jumlah ELSE 0 END), 0) AS total_saldo
+                FROM worker_ledgers";
+        $row = $this->db->query($sql)->row();
+        return $row ? $row->total_saldo : 0;
+    }
+
+    public function get_global_proyek_aktif()
+    {
+        return $this->db->where('status_project', 'Aktif')->count_all_results('projects');
+    }
+
+    public function get_daily_income_global($start_date, $end_date)
+    {
+        $sql = "SELECT DATE(tgl) AS tgl, SUM(jumlah) AS total 
+                FROM project_payments 
+                WHERE tgl >= ? AND tgl <= ? 
+                GROUP BY DATE(tgl) ORDER BY DATE(tgl) ASC";
+        return $this->db->query($sql, [$start_date, $end_date])->result();
+    }
+
+    public function get_daily_expense_global($start_date, $end_date)
+    {
+        $sql = "SELECT DATE(tgl) AS tgl, SUM(jumlah) AS total 
+                FROM expenses 
+                WHERE tgl >= ? AND tgl <= ? 
+                GROUP BY DATE(tgl) ORDER BY DATE(tgl) ASC";
+        return $this->db->query($sql, [$start_date, $end_date])->result();
+    }
+
+    // Breakdown Pemasukan & Pengeluaran per Cabang (Untuk Tabel Analisis)
+    public function get_performa_cabang($start_date, $end_date)
+    {
+        $sql = "SELECT w.id, w.nama_workshop,
+                    (SELECT COALESCE(SUM(pp.jumlah), 0) FROM project_payments pp JOIN projects p ON p.id = pp.project_id WHERE p.workshop_id = w.id AND pp.tgl >= ? AND pp.tgl <= ?) as total_pemasukan,
+                    (SELECT COALESCE(SUM(e.jumlah), 0) FROM expenses e WHERE e.workshop_id = w.id AND e.tgl >= ? AND e.tgl <= ?) as total_pengeluaran
+                FROM workshops w";
+        return $this->db->query($sql, [$start_date, $end_date, $start_date, $end_date])->result();
     }
 }
