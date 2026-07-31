@@ -123,6 +123,19 @@
 
         #sidebar .nav-link i { font-size: 1rem; width: 20px; text-align: center; }
 
+        /* ── SIDEBAR OVERLAY (MOBILE) ── */
+        #sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 999; /* Berada tepat di bawah sidebar (z-index: 1000) */
+            backdrop-filter: blur(2px);
+        }
+        #sidebar-overlay.show {
+            display: block;
+        }
+
         /* ── TOPBAR ── */
         #topbar {
             position: fixed;
@@ -145,6 +158,10 @@
             font-weight: 700;
             color: var(--text-primary);
             flex: 1;
+            /* Tambahan untuk mencegah teks turun ke bawah di HP */
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         #topbar .topbar-workshop {
@@ -249,6 +266,12 @@
             font-size: 0.875rem;
             vertical-align: middle;
             border-bottom: 1px solid #F3F4F6;
+        }
+
+        .table-action {
+            white-space: nowrap; /* Memaksa tombol tetap sejajar menyamping */
+            width: 1%; /* Memaksa lebar kolom menyesuaikan isi tombol */
+            text-align: center;
         }
 
         .table tbody tr:last-child td { border-bottom: none; }

@@ -67,7 +67,7 @@
                         <td style="text-align:right;font-weight:700;color:#991B1B;">
                             Rp <?= number_format($e->jumlah, 0, ',', '.') ?>
                         </td>
-                        <td style="text-align:center;">
+                        <td style="table-action text-align:center;">
                             <button class="btn-action btn-edit btn-edit-expense me-1"
                                     data-id="<?= $e->id ?>"
                                     title="Edit">

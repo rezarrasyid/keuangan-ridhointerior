@@ -102,7 +102,7 @@
                                 <?= $p->status_project ?>
                             </span>
                         </td>
-                        <td style="text-align:center;">
+                        <td style="table-action text-align:center;">
                             <a href="<?= base_url('projects/detail/' . $p->id) ?>" class="btn-action btn-detail me-1" title="Detail & Termin">
                                 <i class="bi bi-eye-fill"></i>
                             </a>

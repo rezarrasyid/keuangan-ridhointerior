@@ -111,7 +111,7 @@ $pct_terbayar = $project->biaya_total > 0 ? min(100, ($project->total_terbayar /
                         <td style="text-align:right;font-weight:700;color:#065F46;">
                             Rp <?= number_format($pay->jumlah, 0, ',', '.') ?>
                         </td>
-                        <td style="text-align:center;">
+                        <td style="table-actiontext-align:center;">
                             <button class="btn-action btn-edit btn-edit-payment me-1"
                                     data-id="<?= $pay->id ?>"
                                     title="Edit Termin">

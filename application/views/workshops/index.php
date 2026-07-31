@@ -51,7 +51,7 @@
                             </span>
                         </td>
                         <td><?= $w->nama_lengkap ? htmlspecialchars($w->nama_lengkap) : '-' ?></td>
-                        <td style="text-align:center;">
+                        <td style="table-action text-align:center;">
                             <button class="btn-action btn-edit btn-edit-ws me-1" data-id="<?= $w->id ?>" title="Edit">
                                 <i class="bi bi-pencil-fill"></i>
                             </button>

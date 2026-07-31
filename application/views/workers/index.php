@@ -79,7 +79,7 @@
                                 Rp <?= number_format($w->sisa_saldo, 0, ',', '.') ?>
                             </span>
                         </td>
-                        <td style="text-align:center;">
+                        <td style="table-action text-align:center;">
                             <a href="<?= base_url('workers/detail/' . $w->id) ?>" class="btn-action btn-detail me-1" title="Detail Ledger">
                                 <i class="bi bi-eye-fill"></i>
                             </a>

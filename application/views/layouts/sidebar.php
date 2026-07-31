@@ -2,18 +2,30 @@
 $current_uri = $this->uri->uri_string();
 $seg1 = $this->uri->segment(1);
 ?>
+<div id="sidebar-overlay"></div>
 <!-- SIDEBAR -->
 <nav id="sidebar">
     <div class="sidebar-brand">
         <div style="display:flex;align-items:center;gap:10px;">
-            <div style="width:38px;height:38px;background:rgba(255,255,255,0.15);border-radius:10px;display:flex;align-items:center;justify-content:center;">
-                <i class="bi bi-house-heart-fill" style="color:#fff;font-size:1.2rem;"></i>
+            <!-- Logo menggunakan CSS mask untuk warna solid #B22222 tanpa background -->
+            <div style="
+                width: 42px; 
+                height: 42px; 
+                -webkit-mask: url('<?= base_url('assets/img/734BEAEA-D60D-4953-B822-57DEE956EE6F.PNG') ?>') no-repeat center; 
+                mask: url('<?= base_url('assets/img/logo.png') ?>') no-repeat center; 
+                -webkit-mask-size: contain; 
+                mask-size: contain;
+                flex-shrink: 0;">
             </div>
             <div>
                 <h2>Ridho Interior</h2>
                 <p><?= isset($user) ? htmlspecialchars($user['nama_workshop']) : '' ?></p>
             </div>
         </div>
+
+        <button class="btn btn-sm d-md-none" id="sidebarClose" style="background:transparent;border:none;color:#fff;font-size:1.5rem;padding:0;">
+                <i class="bi bi-x-lg"></i>
+        </button>
     </div>
 
     <div class="nav-section-label">Menu Utama</div>

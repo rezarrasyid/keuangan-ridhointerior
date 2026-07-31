@@ -13,8 +13,12 @@
         :root {
             --primary: #1E3A8A;
             --primary-light: #2563EB;
+            /* Tambahan variabel teks agar inline style di bawah berfungsi */
+            --text-primary: #111827;
+            --text-muted: #6B7280;
         }
         * { box-sizing: border-box; }
+        
         body {
             font-family: 'Inter', sans-serif;
             min-height: 100vh;
@@ -24,7 +28,10 @@
             background: linear-gradient(135deg, #0f1f5c 0%, #1E3A8A 40%, #1d4ed8 70%, #3B82F6 100%);
             position: relative;
             overflow: hidden;
+            /* Tambahan padding agar card tidak offset di layar HP */
+            padding: 20px; 
         }
+        
         /* Decorative circles */
         body::before, body::after {
             content: '';
@@ -46,30 +53,12 @@
             z-index: 10;
             animation: cardUp 0.5s ease;
         }
+        
         @keyframes cardUp {
             from { transform: translateY(30px); opacity: 0; }
             to   { transform: translateY(0); opacity: 1; }
         }
-        .login-logo {
-            width: 56px; height: 56px;
-            background: linear-gradient(135deg, var(--primary), var(--primary-light));
-            border-radius: 14px;
-            display: flex; align-items: center; justify-content: center;
-            margin-bottom: 20px;
-            box-shadow: 0 8px 20px rgba(30,58,138,0.3);
-        }
-        .login-logo i { font-size: 1.6rem; color: #fff; }
-        .login-card h1 {
-            font-size: 1.6rem;
-            font-weight: 800;
-            color: #111827;
-            margin-bottom: 4px;
-        }
-        .login-card p.sub {
-            font-size: 0.875rem;
-            color: #6B7280;
-            margin-bottom: 28px;
-        }
+        
         .form-label {
             font-size: 0.825rem;
             font-weight: 600;
@@ -125,25 +114,26 @@
             align-items: center;
             gap: 8px;
         }
-        .demo-hint {
-            margin-top: 24px;
-            padding: 12px;
-            background: #EFF6FF;
-            border-radius: 10px;
-            font-size: 0.78rem;
-            color: #1E40AF;
-            border: 1px solid #BFDBFE;
-        }
-        .demo-hint strong { display: block; margin-bottom: 4px; font-size: 0.8rem; }
     </style>
 </head>
 <body>
 <div class="login-card">
-    <div class="login-logo">
-        <i class="bi bi-house-heart-fill"></i>
+    <!-- Header Logo Login -->
+    <div style="text-align: center; margin-bottom: 30px;">
+        <!-- Logo menggunakan CSS mask dengan penambahan background-color -->
+        <div style="
+            width: 80px; 
+            height: 80px; 
+            background-color: #B22222;
+            -webkit-mask: url('<?= base_url('assets/img/734BEAEA-D60D-4953-B822-57DEE956EE6F.PNG') ?>') no-repeat center; 
+            mask: url('<?= base_url('assets/img/734BEAEA-D60D-4953-B822-57DEE956EE6F.PNG') ?>') no-repeat center; 
+            -webkit-mask-size: contain; 
+            mask-size: contain;
+            margin: 0 auto 16px auto;">
+        </div>
+        <h4 style="font-weight: 700; color: var(--text-primary); margin: 0;">Login Ridho Interior</h4>
+        <p style="font-size: 0.875rem; color: var(--text-muted); margin-top: 5px;">Silakan masuk ke akun Anda</p>
     </div>
-    <h1>Ridho Interior</h1>
-    <p class="sub">Sistem Manajemen Keuangan Workshop</p>
 
     <?php if ($this->session->flashdata('error')): ?>
     <div class="alert-error">
@@ -185,11 +175,6 @@
             <i class="bi bi-box-arrow-in-right me-2"></i>Masuk ke Sistem
         </button>
     </form>
-
-    <div class="demo-hint">
-        <strong><i class="bi bi-info-circle me-1"></i>Akun Demo:</strong>
-        <span>Username: <code>admin_jakarta</code>&nbsp; | &nbsp;Password: <code>password</code></span>
-    </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>

@@ -107,7 +107,7 @@
                             color:<?= $l->jenis === 'Hak_Upah' ? '#065F46' : '#991B1B' ?>;">
                             <?= ($l->jenis === 'Hak_Upah' ? '+' : '-') ?>Rp <?= number_format($l->jumlah, 0, ',', '.') ?>
                         </td>
-                        <td style="text-align:center;">
+                        <td style="table-action text-align:center;">
                             <button class="btn-action btn-edit btn-edit-ledger me-1"
                                     data-id="<?= $l->id ?>"
                                     title="Edit Transaksi">

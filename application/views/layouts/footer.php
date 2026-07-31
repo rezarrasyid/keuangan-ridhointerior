@@ -31,8 +31,16 @@ function showToast(message, type) {
 }
 
 // ── Sidebar Toggle (mobile) ──
+// ── Sidebar Toggle (mobile) ──
 $('#sidebarToggle').on('click', function() {
-    $('#sidebar').toggleClass('show');
+    $('#sidebar').addClass('show');
+    $('#sidebar-overlay').addClass('show');
+});
+
+// Menutup sidebar saat tombol X atau area luar diklik
+$('#sidebarClose, #sidebar-overlay').on('click', function() {
+    $('#sidebar').removeClass('show');
+    $('#sidebar-overlay').removeClass('show');
 });
 
 // ── Format Rupiah ──

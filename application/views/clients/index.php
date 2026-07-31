@@ -64,7 +64,7 @@
                         <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
                             <?= $c->alamat ? htmlspecialchars($c->alamat) : '<span style="color:#D1D5DB;">-</span>' ?>
                         </td>
-                        <td style="text-align:center;">
+                        <td style="table-action text-align:center;">
                             <button class="btn-action btn-edit btn-edit-klien me-1"
                                     data-id="<?= $c->id ?>"
                                     title="Edit">
