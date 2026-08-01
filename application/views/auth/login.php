@@ -122,14 +122,18 @@
     <div style="text-align: center; margin-bottom: 30px;">
         <!-- Logo menggunakan CSS mask dengan penambahan background-color -->
         <div style="
-            width: 80px; 
+           width: 80px; 
             height: 80px; 
-            background-color: #B22222;
-            -webkit-mask: url('<?= base_url('assets/img/734BEAEA-D60D-4953-B822-57DEE956EE6F.PNG') ?>') no-repeat center; 
-            mask: url('<?= base_url('assets/img/734BEAEA-D60D-4953-B822-57DEE956EE6F.PNG') ?>') no-repeat center; 
-            -webkit-mask-size: contain; 
+            background-color: #2053DB;
+            -webkit-mask-image: url('/assets/img/logotp.png');
+            -webkit-mask-size: contain;
+            -webkit-mask-repeat: no-repeat;
+            -webkit-mask-position: center;
+            mask-image: url('/assets/img/logotp.png');
             mask-size: contain;
-            margin: 0 auto 16px auto;">
+            mask-repeat: no-repeat;
+            mask-position: center;
+            margin: 0 auto 16px auto;;">
         </div>
         <h4 style="font-weight: 700; color: var(--text-primary); margin: 0;">Login Ridho Interior</h4>
         <p style="font-size: 0.875rem; color: var(--text-muted); margin-top: 5px;">Silakan masuk ke akun Anda</p>

@@ -52,14 +52,13 @@
                         <td>
                             <div style="font-weight:600;"><?= htmlspecialchars($c->nama) ?></div>
                         </td>
+                        <?php 
+                        $wa_number = preg_replace('/^0/', '62', preg_replace('/[^0-9]/', '', $c->telepon));
+                        ?>
                         <td>
-                            <?php if ($c->telepon): ?>
-                            <a href="tel:<?= $c->telepon ?>" style="color:var(--primary-light);text-decoration:none;">
-                                <i class="bi bi-telephone me-1"></i><?= htmlspecialchars($c->telepon) ?>
+                            <a href="https://wa.me/<?= $wa_number ?>" target="_blank" style="color:#25D366; text-decoration:none; font-weight:500;">
+                                <i class="bi bi-whatsapp me-1"></i><?= htmlspecialchars($c->telepon) ?>
                             </a>
-                            <?php else: ?>
-                            <span style="color:#D1D5DB;">-</span>
-                            <?php endif; ?>
                         </td>
                         <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
                             <?= $c->alamat ? htmlspecialchars($c->alamat) : '<span style="color:#D1D5DB;">-</span>' ?>

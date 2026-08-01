@@ -7,14 +7,18 @@ $seg1 = $this->uri->segment(1);
 <nav id="sidebar">
     <div class="sidebar-brand">
         <div style="display:flex;align-items:center;gap:10px;">
-            <!-- Logo menggunakan CSS mask untuk warna solid #B22222 tanpa background -->
             <div style="
                 width: 42px; 
                 height: 42px; 
-                -webkit-mask: url('<?= base_url('assets/img/734BEAEA-D60D-4953-B822-57DEE956EE6F.PNG') ?>') no-repeat center; 
-                mask: url('<?= base_url('assets/img/logo.png') ?>') no-repeat center; 
-                -webkit-mask-size: contain; 
+                background-color: #FFFF;
+                -webkit-mask-image: url('/assets/img/logotp.png');
+                -webkit-mask-size: contain;
+                -webkit-mask-repeat: no-repeat;
+                -webkit-mask-position: center;
+                mask-image: url('/assets/img/logotp.png');
                 mask-size: contain;
+                mask-repeat: no-repeat;
+                mask-position: center;
                 flex-shrink: 0;">
             </div>
             <div>

@@ -61,7 +61,12 @@
                             <div style="font-weight:600;"><?= htmlspecialchars($w->nama) ?></div>
                         </td>
                         <td>
-                            <?= $w->telepon ? htmlspecialchars($w->telepon) : '<span style="color:#D1D5DB;">-</span>' ?>
+                            <?php 
+                                $wa_tukang = preg_replace('/^0/', '62', preg_replace('/[^0-9]/', '', $w->telepon));
+                            ?>
+                            <a href="https://wa.me/<?= $wa_tukang ?>" target="_blank" style="color:#25D366; text-decoration:none; font-weight:500;">
+                                <i class="bi bi-whatsapp me-1"></i><?= htmlspecialchars($w->telepon) ?>
+                            </a>
                         </td>
                         <td>
                             <span class="badge-status badge-<?= strtolower($w->kategori) ?>">
