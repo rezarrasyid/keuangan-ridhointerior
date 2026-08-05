@@ -147,6 +147,7 @@
     <?php endif; ?>
 
     <form action="<?= base_url('auth/do_login') ?>" method="POST">
+        <input type="hidden" name="<?= $this->security->get_csrf_token_name(); ?>" value="<?= $this->security->get_csrf_hash(); ?>">
         <div class="mb-3">
             <label for="username" class="form-label">Username</label>
             <div class="input-group">
