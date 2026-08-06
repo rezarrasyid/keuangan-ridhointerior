@@ -2,6 +2,8 @@
 function fmt($n) {
     return 'Rp ' . number_format($n, 0, ',', '.');
 }
+$kpi = (object) $kpi_tambahan;
+$persen_tagihan = $kpi->total_nilai > 0 ? round(($kpi->total_tagihan / $kpi->total_nilai) * 100, 2) : 0;
 ?>
 
 <!-- Page Header -->
@@ -21,8 +23,8 @@ function fmt($n) {
     </div>
 </div>
 
-<!-- ── KPI Cards ── -->
-<div class="row g-3 mb-4">
+<!-- ── KPI Cards (BAWAAN) ── -->
+<div class="row g-3 mb-3">
     <!-- Total Pemasukan -->
     <div class="col-sm-6 col-xl-3">
         <div class="card stat-card" style="border-top:4px solid #10B981;">
@@ -66,8 +68,48 @@ function fmt($n) {
     </div>
 </div>
 
-<!-- ── Charts + Top Client ── -->
-<div class="row g-3">
+<!-- ── KPI Cards (TAMBAHAN KLIEN - OVERALL) ── -->
+<div class="row g-2 mb-4">
+    <div class="col-md-4 col-xl-2">
+        <div class="card stat-card" style="background:#E27B42; color:#fff; padding:15px; border-radius:10px;">
+            <div style="font-size:0.8rem; font-weight:600; opacity:0.9;">Total Nilai Proyek</div>
+            <div style="font-size:1.1rem; font-weight:700; margin-top:5px;"><?= fmt($kpi->total_nilai) ?></div>
+        </div>
+    </div>
+    <div class="col-md-4 col-xl-2">
+        <div class="card stat-card" style="background:#8C9B6A; color:#fff; padding:15px; border-radius:10px;">
+            <div style="font-size:0.8rem; font-weight:600; opacity:0.9;">Total DP</div>
+            <div style="font-size:1.1rem; font-weight:700; margin-top:5px;"><?= fmt($kpi->total_dp) ?></div>
+        </div>
+    </div>
+    <div class="col-md-4 col-xl-2">
+        <div class="card stat-card" style="background:#7FB3D5; color:#fff; padding:15px; border-radius:10px;">
+            <div style="font-size:0.8rem; font-weight:600; opacity:0.9;">Total Pelunasan</div>
+            <div style="font-size:1.1rem; font-weight:700; margin-top:5px;"><?= fmt($kpi->total_pelunasan) ?></div>
+        </div>
+    </div>
+    <div class="col-md-4 col-xl-2">
+        <div class="card stat-card" style="background:#807B77; color:#fff; padding:15px; border-radius:10px;">
+            <div style="font-size:0.8rem; font-weight:600; opacity:0.9;">Total Tagihan</div>
+            <div style="font-size:1.1rem; font-weight:700; margin-top:5px;"><?= fmt($kpi->total_tagihan) ?></div>
+        </div>
+    </div>
+    <div class="col-md-4 col-xl-2">
+        <div class="card stat-card" style="background:#659E93; color:#fff; padding:15px; border-radius:10px;">
+            <div style="font-size:0.8rem; font-weight:600; opacity:0.9;">% Tagihan</div>
+            <div style="font-size:1.3rem; font-weight:700; margin-top:5px;"><?= $persen_tagihan ?>%</div>
+        </div>
+    </div>
+    <div class="col-md-4 col-xl-2">
+        <div class="card stat-card" style="background:#DCAB56; color:#fff; padding:15px; border-radius:10px;">
+            <div style="font-size:0.8rem; font-weight:600; opacity:0.9;">Total Client</div>
+            <div style="font-size:1.3rem; font-weight:700; margin-top:5px;"><?= $kpi->total_klien ?> <i class="bi bi-people ms-2"></i></div>
+        </div>
+    </div>
+</div>
+
+<!-- ── CHARTS EXISTING (Grafik Harian & Top Klien) ── -->
+<div class="row g-3 mb-4">
     <!-- Bar Chart -->
     <div class="col-xl-8">
         <div class="card h-100">
@@ -87,7 +129,7 @@ function fmt($n) {
         </div>
     </div>
 
-    <!-- Top Client -->
+    <!-- Top Client Keseluruhan -->
     <div class="col-xl-4">
         <div class="card h-100">
             <div class="card-header">
@@ -122,6 +164,39 @@ function fmt($n) {
     </div>
 </div>
 
+<!-- ── CHARTS TAMBAHAN (DARI KLIEN) ── -->
+<div class="row g-3">
+    <!-- Pie Chart Status Project -->
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-header"><h5>Status per Project</h5></div>
+            <div class="card-body">
+                <canvas id="pieStatusChart" style="max-height:250px;"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Top 10 Klien Tagihan Tertinggi -->
+    <div class="col-md-8">
+        <div class="card h-100">
+            <div class="card-header"><h5>Top 10 Klien dengan Tagihan Tertinggi</h5></div>
+            <div class="card-body">
+                <canvas id="barTagihanChart" style="max-height:250px;"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Distribusi Pembayaran -->
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header"><h5>Distribusi Pembayaran</h5></div>
+            <div class="card-body">
+                <canvas id="stackedDistribusiChart" style="max-height:150px;"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
 // ── Handle Filter URL ──
 $('#btnFilter').on('click', function() {
@@ -132,17 +207,15 @@ $('#btnFilter').on('click', function() {
     }
 });
 
-// ── Chart.js Setup ──
+// ── Chart.js Setup (Existing Harian) ──
 var chartInstance = null;
 
 function loadChart(start, end) {
     $('#chartLoader').show();
     $('#chartContainer').hide();
     
-    // Format label kecil di atas grafik
     $('#chartRangeLabel').text(start + ' s/d ' + end);
 
-    // Menggunakan $.ajax agar lebih mudah menangkap error
     $.ajax({
         url: BASE_URL + 'dashboard/chart_data',
         type: 'GET',
@@ -156,7 +229,7 @@ function loadChart(start, end) {
 
             var ctx = document.getElementById('financeChart').getContext('2d');
             chartInstance = new Chart(ctx, {
-                type: 'line', // Ganti ke line chart lebih cocok untuk harian
+                type: 'line',
                 data: {
                     labels: res.labels,
                     datasets: [
@@ -167,7 +240,7 @@ function loadChart(start, end) {
                             borderColor: '#10B981',
                             borderWidth: 2,
                             fill: true,
-                            tension: 0.3, // Membuat garis lebih melengkung
+                            tension: 0.3,
                             pointRadius: 3
                         },
                         {
@@ -186,60 +259,92 @@ function loadChart(start, end) {
                     responsive: true,
                     maintainAspectRatio: false,
                     plugins: {
-                        legend: {
-                            position: 'top',
-                            labels: {
-                                usePointStyle: true,
-                                font: { family: 'Inter', size: 12, weight: '600' }
-                            }
-                        },
-                        tooltip: {
-                            backgroundColor: '#1F2937',
-                            padding: 12,
-                            cornerRadius: 8,
-                            callbacks: {
-                                label: function(ctx) {
-                                    return ' ' + ctx.dataset.label + ': Rp ' + ctx.parsed.y.toLocaleString('id-ID');
-                                }
-                            }
-                        }
+                        legend: { position: 'top', labels: { usePointStyle: true, font: { family: 'Inter', size: 12, weight: '600' } } },
+                        tooltip: { backgroundColor: '#1F2937', padding: 12, cornerRadius: 8, callbacks: { label: function(ctx) { return ' ' + ctx.dataset.label + ': Rp ' + ctx.parsed.y.toLocaleString('id-ID'); } } }
                     },
                     scales: {
-                        x: {
-                            grid: { display: false },
-                            ticks: { font: { family: 'Inter', size: 11 }, color: '#6B7280' }
-                        },
-                        y: {
-                            grid: { color: '#F3F4F6' },
-                            beginAtZero: true,
-                            ticks: {
-                                font: { family: 'Inter', size: 11 },
-                                color: '#6B7280',
-                                callback: function(value) {
-                                    if (value >= 1000000) {
-                                        // Menampilkan misal 1.5 Jt jika ada desimal, atau 1 Jt jika pas
-                                        return 'Rp ' + (value / 1000000).toFixed(1).replace('.0', '') + ' Jt';
-                                    }
-                                    return 'Rp ' + value.toLocaleString('id-ID');
-                                }
-                            }
-                        }
+                        x: { grid: { display: false }, ticks: { font: { family: 'Inter', size: 11 }, color: '#6B7280', autoSkip: true, maxTicksLimit: 12, maxRotation: 45, minRotation: 45 } },
+                        y: { grid: { color: '#F3F4F6' }, beginAtZero: true, ticks: { font: { family: 'Inter', size: 11 }, color: '#6B7280', callback: function(value) { if (value >= 1000000) { return 'Rp ' + (value / 1000000).toFixed(1).replace('.0', '') + ' Jt'; } return 'Rp ' + value.toLocaleString('id-ID'); } } }
                     }
                 }
             });
         },
         error: function(xhr, status, error) {
             $('#chartLoader').hide();
-            // Pesan error dari global ajaxSetup sudah cukup
             console.error("Gagal memuat grafik:", error);
         }
     });
 }
 
-// Initial load menggunakan value dari input PHP
 $(document).ready(function() {
     var initialStart = $('#filterStart').val();
     var initialEnd   = $('#filterEnd').val();
     loadChart(initialStart, initialEnd);
+
+    // ── CHARTS TAMBAHAN (DARI KLIEN) ──
+    var statusData = <?= json_encode($status_project) ?>;
+    var tagihanData = <?= json_encode($top_tagihan) ?>;
+    var distribusiData = <?= json_encode($distribusi) ?>;
+
+    // 1. PIE CHART (Status Project)
+    new Chart(document.getElementById('pieStatusChart').getContext('2d'), {
+        type: 'pie',
+        data: {
+            labels: ['LUNAS', 'BELUM LUNAS'],
+            datasets: [{
+                data: [statusData.lunas, statusData.belum_lunas],
+                backgroundColor: ['#DCAB56', '#E27B42']
+            }]
+        },
+        options: { responsive: true, maintainAspectRatio: false }
+    });
+
+    // 2. BAR CHART (Top 10 Tagihan)
+    var tagihanLabels = tagihanData.map(item => item.nama);
+    var tagihanValues = tagihanData.map(item => item.tagihan);
+    new Chart(document.getElementById('barTagihanChart').getContext('2d'), {
+        type: 'bar',
+        data: {
+            labels: tagihanLabels,
+            datasets: [{
+                label: 'Total Tagihan (Belum Dibayar)',
+                data: tagihanValues,
+                backgroundColor: '#7FB3D5'
+            }]
+        },
+        options: {
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } }
+        }
+    });
+
+    // 3. STACKED BAR CHART (Distribusi Pembayaran)
+    var distDatasets = distribusiData.map((item, index) => {
+        const colors = ['#7FB3D5', '#E27B42', '#8C9B6A', '#DCAB56', '#807B77', '#659E93'];
+        return {
+            label: item.termin,
+            data: [item.total],
+            backgroundColor: colors[index % colors.length]
+        };
+    });
+
+    new Chart(document.getElementById('stackedDistribusiChart').getContext('2d'), {
+        type: 'bar',
+        data: {
+            labels: ['Distribusi'],
+            datasets: distDatasets
+        },
+        options: {
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                x: { stacked: true },
+                y: { stacked: true, display: false }
+            }
+        }
+    });
 });
 </script>

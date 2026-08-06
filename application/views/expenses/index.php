@@ -146,7 +146,10 @@
                         <select class="form-select" id="expenseProject" name="project_id">
                             <option value="">-- Operasional Umum (Tidak Terkait Proyek) --</option>
                             <?php foreach ($projects_dropdown as $p): ?>
-                            <option value="<?= $p->id ?>"><?= htmlspecialchars($p->nama_project) ?></option>
+                            <!-- Menambahkan nama klien di samping nama proyek -->
+                            <option value="<?= $p->id ?>">
+                                <?= htmlspecialchars($p->nama_project) ?> - (Klien: <?= htmlspecialchars($p->nama_client ?? $p->nama_klien ?? $p->nama ?? 'Tidak diketahui') ?>)
+                            </option>
                             <?php endforeach; ?>
                         </select>
                     </div>

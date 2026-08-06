@@ -29,6 +29,21 @@ class Project_model extends CI_Model {
             ->result();
     }
 
+    public function get_dropdown($workshop_id)
+    {
+        $this->db->select('projects.id, projects.nama_project, clients.nama as nama_client');
+        $this->db->from('projects');
+        $this->db->join('clients', 'clients.id = projects.client_id', 'left');
+        $this->db->where('projects.workshop_id', $workshop_id);
+        
+        // Opsional: Jika kamu hanya ingin menampilkan proyek yang statusnya 'Aktif' di dropdown
+        // $this->db->where('projects.status_project', 'Aktif'); 
+        
+        $this->db->order_by('projects.id', 'DESC');
+        return $this->db->get()->result();
+    }
+    
+
     /**
      * Ambil list proyek dengan pencarian, paginasi, dan filter tanggal/bulan
      */
@@ -221,19 +236,5 @@ class Project_model extends CI_Model {
         } else {
             $this->db->where('id', $project_id)->update($this->table, ['status_pembayaran' => 'Belum Lunas']);
         }
-    }
-
-    /**
-     * Ambil proyek aktif untuk dropdown
-     */
-    public function get_dropdown($workshop_id)
-    {
-        return $this->db
-            ->select('id, nama_project')
-            ->where('workshop_id', $workshop_id)
-            ->where('status_project', 'Aktif')
-            ->order_by('nama_project', 'ASC')
-            ->get($this->table)
-            ->result();
     }
 }

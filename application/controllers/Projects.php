@@ -264,4 +264,17 @@ class Projects extends MY_Controller {
             $this->json_response(['status' => 'error', 'message' => 'Gagal memperbarui termin.'], 500);
         }
     }
+
+    public function get_project($id)
+    {
+        if (!$this->input->is_ajax_request()) show_404();
+        
+        $project = $this->Project_model->get_by_id($id, $this->workshop_id);
+        
+        if ($project) {
+            $this->json_response(['status' => 'success', 'data' => $project]);
+        } else {
+            $this->json_response(['status' => 'error', 'message' => 'Proyek tidak ditemukan.'], 404);
+        }
+    }
 }

@@ -1,5 +1,7 @@
 <?php
 function fmt($n) { return 'Rp ' . number_format($n, 0, ',', '.'); }
+$kpi = (object) $kpi_tambahan;
+$persen_tagihan = $kpi->total_nilai > 0 ? round(($kpi->total_tagihan / $kpi->total_nilai) * 100, 2) : 0;
 ?>
 
 <!-- Page Header -->
@@ -17,8 +19,8 @@ function fmt($n) { return 'Rp ' . number_format($n, 0, ',', '.'); }
     </div>
 </div>
 
-<!-- ── KPI Cards (GLOBAL) ── -->
-<div class="row g-3 mb-4">
+<!-- ── KPI Cards (GLOBAL BAWAAN) ── -->
+<div class="row g-3 mb-3">
     <div class="col-sm-6 col-xl-3">
         <div class="card stat-card" style="border-top:4px solid #10B981;">
             <div class="stat-icon" style="background:#D1FAE5;color:#065F46;"><i class="bi bi-arrow-down-circle-fill"></i></div>
@@ -50,7 +52,48 @@ function fmt($n) { return 'Rp ' . number_format($n, 0, ',', '.'); }
     </div>
 </div>
 
-<div class="row g-3">
+<!-- ── KPI Cards (TAMBAHAN KLIEN - OVERALL GLOBAL) ── -->
+<div class="row g-2 mb-4">
+    <div class="col-md-4 col-xl-2">
+        <div class="card stat-card" style="background:#E27B42; color:#fff; padding:15px; border-radius:10px;">
+            <div style="font-size:0.8rem; font-weight:600; opacity:0.9;">Total Nilai Proyek</div>
+            <div style="font-size:1.1rem; font-weight:700; margin-top:5px;"><?= fmt($kpi->total_nilai) ?></div>
+        </div>
+    </div>
+    <div class="col-md-4 col-xl-2">
+        <div class="card stat-card" style="background:#8C9B6A; color:#fff; padding:15px; border-radius:10px;">
+            <div style="font-size:0.8rem; font-weight:600; opacity:0.9;">Total DP</div>
+            <div style="font-size:1.1rem; font-weight:700; margin-top:5px;"><?= fmt($kpi->total_dp) ?></div>
+        </div>
+    </div>
+    <div class="col-md-4 col-xl-2">
+        <div class="card stat-card" style="background:#7FB3D5; color:#fff; padding:15px; border-radius:10px;">
+            <div style="font-size:0.8rem; font-weight:600; opacity:0.9;">Total Pelunasan</div>
+            <div style="font-size:1.1rem; font-weight:700; margin-top:5px;"><?= fmt($kpi->total_pelunasan) ?></div>
+        </div>
+    </div>
+    <div class="col-md-4 col-xl-2">
+        <div class="card stat-card" style="background:#807B77; color:#fff; padding:15px; border-radius:10px;">
+            <div style="font-size:0.8rem; font-weight:600; opacity:0.9;">Total Tagihan</div>
+            <div style="font-size:1.1rem; font-weight:700; margin-top:5px;"><?= fmt($kpi->total_tagihan) ?></div>
+        </div>
+    </div>
+    <div class="col-md-4 col-xl-2">
+        <div class="card stat-card" style="background:#659E93; color:#fff; padding:15px; border-radius:10px;">
+            <div style="font-size:0.8rem; font-weight:600; opacity:0.9;">% Tagihan</div>
+            <div style="font-size:1.3rem; font-weight:700; margin-top:5px;"><?= $persen_tagihan ?>%</div>
+        </div>
+    </div>
+    <div class="col-md-4 col-xl-2">
+        <div class="card stat-card" style="background:#DCAB56; color:#fff; padding:15px; border-radius:10px;">
+            <div style="font-size:0.8rem; font-weight:600; opacity:0.9;">Total Client</div>
+            <div style="font-size:1.3rem; font-weight:700; margin-top:5px;"><?= $kpi->total_klien ?> <i class="bi bi-people ms-2"></i></div>
+        </div>
+    </div>
+</div>
+
+<!-- ── CHARTS EXISTING (Line Chart Global & Tabel Cabang) ── -->
+<div class="row g-3 mb-4">
     <!-- Line Chart Global -->
     <div class="col-xl-7">
         <div class="card h-100">
@@ -102,6 +145,39 @@ function fmt($n) { return 'Rp ' . number_format($n, 0, ',', '.'); }
                         </tbody>
                     </table>
                 </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ── CHARTS TAMBAHAN (DARI KLIEN) ── -->
+<div class="row g-3">
+    <!-- Pie Chart Status Project -->
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-header"><h5>Status per Project (Keseluruhan)</h5></div>
+            <div class="card-body">
+                <canvas id="pieStatusChart" style="max-height:250px;"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Top 10 Klien Tagihan Tertinggi -->
+    <div class="col-md-8">
+        <div class="card h-100">
+            <div class="card-header"><h5>Top 10 Klien dengan Tagihan Tertinggi (Keseluruhan)</h5></div>
+            <div class="card-body">
+                <canvas id="barTagihanChart" style="max-height:250px;"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Distribusi Pembayaran -->
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header"><h5>Distribusi Pembayaran (Keseluruhan)</h5></div>
+            <div class="card-body">
+                <canvas id="stackedDistribusiChart" style="max-height:150px;"></canvas>
             </div>
         </div>
     </div>
@@ -178,7 +254,15 @@ function loadChart(start, end) {
                         }
                     },
                     scales: {
-                        x: { grid: { display: false } },
+                        x: { 
+                            grid: { display: false },
+                            ticks: {
+                                autoSkip: true,
+                                maxTicksLimit: 12,
+                                maxRotation: 45,
+                                minRotation: 45
+                            }
+                        },
                         y: {
                             grid: { color: '#F3F4F6' },
                             beginAtZero: true,
@@ -202,5 +286,71 @@ $(document).ready(function() {
     var initialStart = $('#filterStart').val();
     var initialEnd   = $('#filterEnd').val();
     loadChart(initialStart, initialEnd);
+
+    // ── CHARTS TAMBAHAN (DARI KLIEN) ──
+    var statusData = <?= json_encode($status_project) ?>;
+    var tagihanData = <?= json_encode($top_tagihan) ?>;
+    var distribusiData = <?= json_encode($distribusi) ?>;
+
+    // 1. PIE CHART (Status Project)
+    new Chart(document.getElementById('pieStatusChart').getContext('2d'), {
+        type: 'pie',
+        data: {
+            labels: ['LUNAS', 'BELUM LUNAS'],
+            datasets: [{
+                data: [statusData.lunas, statusData.belum_lunas],
+                backgroundColor: ['#DCAB56', '#E27B42']
+            }]
+        },
+        options: { responsive: true, maintainAspectRatio: false }
+    });
+
+    // 2. BAR CHART (Top 10 Tagihan)
+    var tagihanLabels = tagihanData.map(item => item.nama);
+    var tagihanValues = tagihanData.map(item => item.tagihan);
+    new Chart(document.getElementById('barTagihanChart').getContext('2d'), {
+        type: 'bar',
+        data: {
+            labels: tagihanLabels,
+            datasets: [{
+                label: 'Total Tagihan (Belum Dibayar)',
+                data: tagihanValues,
+                backgroundColor: '#7FB3D5'
+            }]
+        },
+        options: {
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } }
+        }
+    });
+
+    // 3. STACKED BAR CHART (Distribusi Pembayaran)
+    var distDatasets = distribusiData.map((item, index) => {
+        const colors = ['#7FB3D5', '#E27B42', '#8C9B6A', '#DCAB56', '#807B77', '#659E93'];
+        return {
+            label: item.termin,
+            data: [item.total],
+            backgroundColor: colors[index % colors.length]
+        };
+    });
+
+    new Chart(document.getElementById('stackedDistribusiChart').getContext('2d'), {
+        type: 'bar',
+        data: {
+            labels: ['Distribusi'],
+            datasets: distDatasets
+        },
+        options: {
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                x: { stacked: true },
+                y: { stacked: true, display: false }
+            }
+        }
+    });
 });
 </script>

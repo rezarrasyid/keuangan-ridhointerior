@@ -103,6 +103,11 @@
                             </span>
                         </td>
                         <td style="table-action text-align:center;">
+                            <button class="btn-action btn-edit btn-edit-project me-1" 
+                                    data-id="<?= $p->id ?>" 
+                                    title="Edit Proyek">
+                                <i class="bi bi-pencil-fill"></i>
+                            </button>
                             <a href="<?= base_url('projects/detail/' . $p->id) ?>" class="btn-action btn-detail me-1" title="Detail & Termin">
                                 <i class="bi bi-eye-fill"></i>
                             </a>
@@ -204,6 +209,64 @@
     </div>
 </div>
 
+<!-- ── Modal Edit Proyek ── -->
+<div class="modal fade" id="modalEditProyek" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-pencil-fill me-2"></i>Edit Proyek</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="formEditProyek">
+                <div class="modal-body">
+                    <input type="hidden" id="editProyekId" name="id">
+                    <div class="row g-3">
+                        <div class="col-md-8">
+                            <label for="editProyekNama" class="form-label">Nama Proyek <span style="color:#EF4444;">*</span></label>
+                            <input type="text" class="form-control" id="editProyekNama" name="nama_project" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="editProyekClient" class="form-label">Klien <span style="color:#EF4444;">*</span></label>
+                            <select class="form-select" id="editProyekClient" name="client_id" required style="width:100%;">
+                                <option value="">-- Pilih Klien --</option>
+                                <?php foreach ($clients_dropdown as $c): ?>
+                                <option value="<?= $c->id ?>"><?= htmlspecialchars($c->nama) ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="editProyekBiaya" class="form-label">Biaya Total (Rp) <span style="color:#EF4444;">*</span></label>
+                            <input type="text" class="form-control input-rupiah" id="editProyekBiaya" name="biaya_total" required>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="editProyekStatus" class="form-label">Status Proyek</label>
+                            <select class="form-select" id="editProyekStatus" name="status_project">
+                                <option value="Aktif">Aktif</option>
+                                <option value="Ditunda">Ditunda</option>
+                                <option value="Selesai">Selesai</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="editProyekTglMulai" class="form-label">Tanggal Mulai</label>
+                            <input type="date" class="form-control" id="editProyekTglMulai" name="tgl_mulai">
+                        </div>
+                        <div class="col-12">
+                            <label for="editProyekDeskripsi" class="form-label">Deskripsi</label>
+                            <textarea class="form-control" id="editProyekDeskripsi" name="deskripsi" rows="2"></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-primary" id="btnUpdateProyek">
+                        <i class="bi bi-save me-1"></i><span>Simpan Perubahan</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 <!-- ── Modal Konfirmasi Hapus ── -->
 <div class="modal fade" id="modalHapusProyek" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-sm">
@@ -279,6 +342,83 @@ $('#formProyek').on('submit', function(e) {
             }
         },
         complete: function() { btn.prop('disabled', false).html('<i class="bi bi-save me-1"></i><span>Simpan Proyek</span>'); }
+    });
+});
+
+// Inisialisasi Select2 untuk Modal Edit
+$('#modalEditProyek').on('shown.bs.modal', function () {
+    $('#editProyekClient').select2({ 
+        dropdownParent: $('#modalEditProyek'), 
+        width: '100%' 
+    });
+});
+
+// ── KLIK EDIT Proyek ──
+$(document).on('click', '.btn-edit-project', function() {
+    var id = $(this).data('id');
+    
+    $.ajax({
+        url: BASE_URL + 'projects/get_project/' + id,
+        type: 'GET',
+        dataType: 'json',
+        success: function(res) {
+            if (res.status === 'success') {
+                var d = res.data;
+                $('#editProyekId').val(d.id);
+                $('#editProyekNama').val(d.nama_project);
+                $('#editProyekClient').val(d.client_id).trigger('change'); // Trigger change untuk Select2
+                
+                // Format angka biaya_total ke Integer untuk diproses input-rupiah
+                var biayaBulat = Math.round(d.biaya_total);
+                $('#editProyekBiaya').val(biayaBulat).trigger('keyup');
+                
+                $('#editProyekStatus').val(d.status_project);
+                $('#editProyekTglMulai').val(d.tgl_mulai);
+                $('#editProyekDeskripsi').val(d.deskripsi || '');
+                
+                $('#modalEditProyek').modal('show');
+            } else {
+                showToast(res.message, 'error');
+            }
+        }
+    });
+});
+
+// ── SUBMIT UPDATE Proyek ──
+$('#formEditProyek').on('submit', function(e) {
+    e.preventDefault();
+    
+    // Membersihkan format titik ribuan sebelum dikirim
+    var inputBiaya = $(this).find('#editProyekBiaya');
+    var angkaBersih = inputBiaya.val().replace(/\./g, '');
+    inputBiaya.val(angkaBersih);
+    
+    var formData = $(this).serialize();
+    var id = $('#editProyekId').val();
+    
+    // Kembalikan format titik ribuan di form jika gagal/selesai agar tampilan tetap bagus
+    inputBiaya.val(angkaBersih.replace(/\B(?=(\d{3})+(?!\d))/g, "."));
+
+    var btn = $('#btnUpdateProyek');
+    btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-1"></span>Menyimpan...');
+    
+    $.ajax({
+        url: BASE_URL + 'projects/update/' + id, 
+        type: 'POST', 
+        data: formData, 
+        dataType: 'json',
+        success: function(res) {
+            if (res.status === 'success') {
+                showToast(res.message, 'success');
+                $('#modalEditProyek').modal('hide');
+                setTimeout(function() { location.reload(); }, 800);
+            } else {
+                showToast(res.message, 'error');
+            }
+        },
+        complete: function() { 
+            btn.prop('disabled', false).html('<i class="bi bi-save me-1"></i><span>Simpan Perubahan</span>'); 
+        }
     });
 });
 

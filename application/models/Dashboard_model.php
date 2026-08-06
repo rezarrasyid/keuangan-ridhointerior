@@ -163,4 +163,83 @@ class Dashboard_model extends CI_Model {
                 FROM workshops w";
         return $this->db->query($sql, [$start_date, $end_date, $start_date, $end_date])->result();
     }
+
+    // ==========================================================
+    // FUNGSI BARU: KPI TAMBAHAN & GRAFIK SESUAI PERMINTAAN KLIEN
+    // ==========================================================
+
+    public function get_kpi_tambahan($workshop_id = null)
+    {
+        $where_workshop = $workshop_id ? " AND p.workshop_id = " . $this->db->escape($workshop_id) : "";
+        $where_client   = $workshop_id ? " AND workshop_id = " . $this->db->escape($workshop_id) : "";
+
+        // 1. Total Klien
+        $total_klien = $this->db->query("SELECT COUNT(DISTINCT id) as total FROM clients WHERE 1=1 $where_client")->row()->total;
+        
+        // 2 & 3. Total DP vs Pelunasan (Memanfaatkan kolom enum 'jenis')
+        $bayar = $this->db->query("SELECT 
+            COALESCE(SUM(CASE WHEN pp.jenis = 'DP' THEN pp.jumlah ELSE 0 END), 0) as total_dp,
+            COALESCE(SUM(CASE WHEN pp.jenis = 'Termin' THEN pp.jumlah ELSE 0 END), 0) as total_pelunasan
+            FROM project_payments pp 
+            JOIN projects p ON p.id = pp.project_id 
+            WHERE 1=1 $where_workshop")->row();
+
+        // 4. Total Nilai Proyek (Menggunakan kolom biaya_total)
+        $proyek = $this->db->query("SELECT COALESCE(SUM(biaya_total), 0) as nilai FROM projects p WHERE 1=1 $where_workshop")->row();
+        
+        // Hitung total tagihan dari: Total Biaya - (Total DP + Total Termin)
+        $total_pembayaran = $bayar->total_dp + $bayar->total_pelunasan;
+        $total_tagihan = $proyek->nilai - $total_pembayaran;
+
+        return [
+            'total_klien'     => $total_klien ?: 0,
+            'total_nilai'     => $proyek->nilai ?: 0,
+            'total_tagihan'   => $total_tagihan > 0 ? $total_tagihan : 0,
+            'total_dp'        => $bayar->total_dp ?: 0,
+            'total_pelunasan' => $bayar->total_pelunasan ?: 0,
+        ];
+    }
+
+    // 5. Persentase Lunas vs Belum Lunas (Pie Chart)
+    public function get_status_project($workshop_id = null) 
+    {
+        $where = $workshop_id ? " WHERE workshop_id = " . $this->db->escape($workshop_id) : "";
+        // Memanfaatkan enum status_pembayaran bawaan tabel projects
+        return $this->db->query("SELECT 
+            COALESCE(SUM(CASE WHEN status_pembayaran = 'Lunas' THEN 1 ELSE 0 END), 0) as lunas,
+            COALESCE(SUM(CASE WHEN status_pembayaran = 'Belum Lunas' THEN 1 ELSE 0 END), 0) as belum_lunas
+            FROM projects $where")->row();
+    }
+
+    // 6. Top 10 Klien dengan Tagihan Tertinggi
+    public function get_top_10_tagihan($workshop_id = null) 
+    {
+        $where = $workshop_id ? " AND p.workshop_id = " . $this->db->escape($workshop_id) : "";
+        
+        // Menghitung tagihan dari biaya_total dikurangi semua jumlah pembayaran
+        $sql = "SELECT c.nama, 
+                   SUM(p.biaya_total - COALESCE((SELECT SUM(jumlah) FROM project_payments WHERE project_id = p.id), 0)) as tagihan
+                FROM projects p 
+                JOIN clients c ON c.id = p.client_id
+                WHERE p.status_pembayaran = 'Belum Lunas' $where
+                GROUP BY p.client_id 
+                ORDER BY tagihan DESC 
+                LIMIT 10";
+                
+        return $this->db->query($sql)->result();
+    }
+
+    // 7. Distribusi Pembayaran (Stacked Bar Chart)
+    public function get_distribusi_pembayaran($workshop_id = null) 
+    {
+        $where = $workshop_id ? " AND p.workshop_id = " . $this->db->escape($workshop_id) : "";
+        
+        // Memanfaatkan kolom nama_pembayaran dan di-alias sebagai 'termin' agar kode JS di View tidak perlu diubah lagi
+        return $this->db->query("SELECT pp.nama_pembayaran as termin, SUM(pp.jumlah) as total
+            FROM project_payments pp 
+            JOIN projects p ON p.id = pp.project_id
+            WHERE 1=1 $where
+            GROUP BY pp.nama_pembayaran 
+            ORDER BY pp.nama_pembayaran ASC")->result();
+    }
 }

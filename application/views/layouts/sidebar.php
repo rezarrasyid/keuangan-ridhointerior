@@ -66,6 +66,9 @@ $seg1 = $this->uri->segment(1);
     <a href="<?= base_url('workshops') ?>" class="nav-link <?= $seg1 === 'workshops' ? 'active' : '' ?>">
         <i class="bi bi-shop"></i> Manajemen Workshop
     </a>
+    <a href="<?= base_url('karyawan') ?>" class="nav-link <?= $seg1 === 'karyawan' ? 'active' : '' ?>">
+        <i class="bi bi-person-vcard-fill"></i> Karyawan & Gaji
+    </a>
     <?php endif; ?>
 
     <div class="nav-section-label" style="margin-top:auto;"></div>

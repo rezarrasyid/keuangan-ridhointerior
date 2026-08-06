@@ -9,11 +9,9 @@ class Dashboard extends MY_Controller {
         $this->load->model(['Dashboard_model', 'Client_model']);
     }
 
-    public function index()
-    {
+    public function index() {
         $wid  = $this->workshop_id;
         
-        // Default: Tanggal 1 bulan ini s/d Hari ini
         $start_date = $this->input->get('start_date') ? $this->input->get('start_date') : date('Y-m-01');
         $end_date   = $this->input->get('end_date') ? $this->input->get('end_date') : date('Y-m-t');
 
@@ -26,6 +24,12 @@ class Dashboard extends MY_Controller {
         $data['saldo_tukang']      = $this->Dashboard_model->get_total_saldo_tukang($wid);
         $data['proyek_aktif']      = $this->Dashboard_model->get_total_proyek_aktif($wid);
         $data['top_clients']       = $this->Client_model->get_top_clients($wid, 5);
+
+        // DATA BARU KLIEN
+        $data['kpi_tambahan']   = $this->Dashboard_model->get_kpi_tambahan($wid);
+        $data['status_project'] = $this->Dashboard_model->get_status_project($wid);
+        $data['top_tagihan']    = $this->Dashboard_model->get_top_10_tagihan($wid);
+        $data['distribusi']     = $this->Dashboard_model->get_distribusi_pembayaran($wid);
 
         $this->load_view('dashboard/index', $data);
     }
@@ -84,8 +88,7 @@ class Dashboard extends MY_Controller {
     /**
      * DASHBOARD PUSAT (Global) - Hanya untuk Superadmin
      */
-    public function pusat()
-    {
+    public function pusat() {
         if (!isset($this->session->userdata['user']) || $this->session->userdata['user']['role'] !== 'superadmin') {
             show_error('Akses Ditolak. Halaman ini hanya untuk Superadmin.', 403);
         }
@@ -101,9 +104,13 @@ class Dashboard extends MY_Controller {
         $data['total_pengeluaran'] = $this->Dashboard_model->get_global_pengeluaran_range($start_date, $end_date);
         $data['saldo_tukang']      = $this->Dashboard_model->get_global_saldo_tukang();
         $data['proyek_aktif']      = $this->Dashboard_model->get_global_proyek_aktif();
-        
-        // Data breakdown performa tiap cabang
         $data['performa_cabang']   = $this->Dashboard_model->get_performa_cabang($start_date, $end_date);
+
+        // DATA BARU KLIEN (GLOBAL)
+        $data['kpi_tambahan']   = $this->Dashboard_model->get_kpi_tambahan();
+        $data['status_project'] = $this->Dashboard_model->get_status_project();
+        $data['top_tagihan']    = $this->Dashboard_model->get_top_10_tagihan();
+        $data['distribusi']     = $this->Dashboard_model->get_distribusi_pembayaran();
 
         $this->load_view('dashboard/pusat', $data);
     }
