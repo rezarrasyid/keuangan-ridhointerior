@@ -34,7 +34,7 @@ $seg1 = $this->uri->segment(1);
 
     <div class="nav-section-label">Menu Utama</div>
 
-    <a href="<?= base_url('dashboard') ?>" class="nav-link <?= $seg1 === 'dashboard' || $seg1 === '' ? 'active' : '' ?>">
+    <a href="<?= base_url('dashboard') ?>" class="nav-link <?= ($seg1 === 'dashboard' && $this->uri->segment(2) !== 'pusat') || $seg1 === '' ? 'active' : '' ?>">
         <i class="bi bi-grid-1x2-fill"></i> Dashboard
     </a>
 

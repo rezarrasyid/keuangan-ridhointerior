@@ -164,13 +164,32 @@ function loadChart(start, end) {
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    plugins: { legend: { position: 'top' } },
+                    plugins: { 
+                        legend: { position: 'top' },
+                        tooltip: {
+                            backgroundColor: '#1F2937',
+                            padding: 12,
+                            cornerRadius: 8,
+                            callbacks: {
+                                label: function(ctx) {
+                                    return ' ' + ctx.dataset.label + ': Rp ' + ctx.parsed.y.toLocaleString('id-ID');
+                                }
+                            }
+                        }
+                    },
                     scales: {
                         x: { grid: { display: false } },
                         y: {
                             grid: { color: '#F3F4F6' },
                             beginAtZero: true,
-                            ticks: { callback: function(val) { return 'Rp ' + (val/1000000).toFixed(0) + 'Jt'; } }
+                            ticks: { 
+                                callback: function(value) { 
+                                    if (value >= 1000000) {
+                                        return 'Rp ' + (value / 1000000).toFixed(1).replace('.0', '') + ' Jt';
+                                    }
+                                    return 'Rp ' + value.toLocaleString('id-ID'); 
+                                } 
+                            }
                         }
                     }
                 }

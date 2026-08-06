@@ -291,9 +291,12 @@ $(document).on('click', '.btn-edit-expense', function() {
                 $('#expenseKategori').val(d.kategori).trigger('change.select2');
                 $('#expenseProject').val(d.project_id || '').trigger('change.select2');
                 
-                // Format angka dari database menggunakan titik
-                var jumlahFormatted = d.jumlah.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
-                $('#expenseJumlah').val(jumlahFormatted);
+                // Buang desimal (.00) dari database dengan mengubahnya ke angka bulat (Integer)
+                var angkaBulat = Math.round(d.jumlah);
+
+                // Masukkan angka yang sudah dibulatkan, lalu pancing format Rupiah otomatis
+                $('#expenseJumlah').val(angkaBulat);
+                $('#expenseJumlah').trigger('keyup');
                 
                 $('#expenseTgl').val(d.tgl);
                 $('#expenseKeterangan').val(d.keterangan || '');

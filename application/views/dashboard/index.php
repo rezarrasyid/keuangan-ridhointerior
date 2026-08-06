@@ -215,7 +215,13 @@ function loadChart(start, end) {
                             ticks: {
                                 font: { family: 'Inter', size: 11 },
                                 color: '#6B7280',
-                                callback: function(val) { return 'Rp ' + (val/1000000).toFixed(0) + 'Jt'; }
+                                callback: function(value) {
+                                    if (value >= 1000000) {
+                                        // Menampilkan misal 1.5 Jt jika ada desimal, atau 1 Jt jika pas
+                                        return 'Rp ' + (value / 1000000).toFixed(1).replace('.0', '') + ' Jt';
+                                    }
+                                    return 'Rp ' + value.toLocaleString('id-ID');
+                                }
                             }
                         }
                     }

@@ -248,8 +248,7 @@
                     <div class="row g-3">
                         <div class="col-md-6">
                             <label for="editLedgerJumlah" class="form-label">Jumlah (Rp) <span style="color:#EF4444;">*</span></label>
-                            <input type="number" class="form-control" id="editLedgerJumlah" name="jumlah" min="1" step="1000" placeholder="0" required>
-                        </div>
+                            <input type="text" class="form-control input-rupiah" id="editLedgerJumlah" name="jumlah" placeholder="0" required>                        </div>
                         <div class="col-md-6">
                             <label for="editLedgerTgl" class="form-label">Tanggal <span style="color:#EF4444;">*</span></label>
                             <input type="date" class="form-control" id="editLedgerTgl" name="tgl" required>
@@ -373,13 +372,25 @@ $(document).on('click', '.btn-edit-ledger', function() {
 // Edit Submit
 $('#formEditLedger').on('submit', function(e) {
     e.preventDefault();
+    
+    // --- Buka sementara titik ribuannya sebelum diambil datanya ---
+    var inputJumlah = $(this).find('.input-rupiah');
+    var angkaBersih = inputJumlah.val().replace(/\./g, '');
+    inputJumlah.val(angkaBersih);
+    
+    var formData = $(this).serialize(); // Ambil data yang sudah bersih
+    
+    // --- Kembalikan titik ribuannya agar tampilan di layar tidak rusak ---
+    inputJumlah.val(angkaBersih.replace(/\B(?=(\d{3})+(?!\d))/g, "."));
+    
     var id = $('#editLedgerId').val();
     var btn = $('#btnUpdateLedger');
     btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-1"></span>Menyimpan...');
+    
     $.ajax({
         url: BASE_URL + 'workers/update_ledger/' + id,
         type: 'POST',
-        data: $(this).serialize(),
+        data: formData, // Gunakan variabel formData di sini
         dataType: 'json',
         success: function(res) {
             if (res.status === 'success') {

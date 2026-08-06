@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Ridho Interior - Aplikasi Manajemen Keuangan Workshop Interior">
+    <!-- CSRF Token Meta Tags -->
+    <meta name="csrf-token-name" content="<?= $this->security->get_csrf_token_name(); ?>">
+    <meta name="csrf-token-hash" content="<?= $this->security->get_csrf_hash(); ?>">
     <title><?= isset($title) ? $title : 'Ridho Interior' ?></title>
 
     <!-- Google Fonts -->
@@ -12,9 +15,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" crossorigin="anonymous">
     
     <!-- Bootstrap 5 -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Bootstrap Icons -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet" integrity="sha384-XG894CYcbQOSdi9jK1X2nQ0+0/Q2N1/l1fM5I5D55jFq28rXF8Q0F5cK/TfQ1M4O" crossorigin="anonymous">    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
     <!-- jQuery CDN -->
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 

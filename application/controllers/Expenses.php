@@ -44,7 +44,7 @@ class Expenses extends MY_Controller {
         if (!$this->input->is_ajax_request()) show_404();
 
         $this->form_validation->set_rules('kategori', 'Kategori', 'required|trim');
-        $this->form_validation->set_rules('jumlah', 'Jumlah', 'required|decimal');
+        $this->form_validation->set_rules('jumlah', 'Jumlah', 'required|numeric');
         $this->form_validation->set_rules('tgl', 'Tanggal', 'required');
 
         if ($this->form_validation->run() === FALSE) {
@@ -91,7 +91,7 @@ class Expenses extends MY_Controller {
         if (!$this->input->is_ajax_request()) show_404();
 
         $this->form_validation->set_rules('kategori', 'Kategori', 'required|trim');
-        $this->form_validation->set_rules('jumlah', 'Jumlah', 'required|decimal');
+        $this->form_validation->set_rules('jumlah', 'Jumlah', 'required|numeric');
         $this->form_validation->set_rules('tgl', 'Tanggal', 'required');
 
         if ($this->form_validation->run() === FALSE) {

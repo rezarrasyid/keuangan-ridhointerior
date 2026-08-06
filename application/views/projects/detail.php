@@ -324,9 +324,12 @@ $(document).on('click', '.btn-edit-payment', function() {
                 $('#editTerminNama').val(d.nama_pembayaran);
                 $('#editTerminJenis').val(d.jenis);
                 
-                // Format ulang data dari database agar bertitik saat masuk ke form edit
-                var jumlahFormatted = d.jumlah.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
-                $('#editTerminJumlah').val(jumlahFormatted);
+                // Buang desimal (.00) dari database dengan mengubahnya ke angka bulat (Integer)
+                var angkaBulat = Math.round(d.jumlah);
+
+                // Masukkan angka yang sudah dibulatkan, lalu pancing format Rupiah otomatis
+                $('#editTerminJumlah').val(angkaBulat);
+                $('#editTerminJumlah').trigger('keyup');
                 
                 $('#editTerminTgl').val(d.tgl);
                 $('#editTerminKet').val(d.keterangan || '');
